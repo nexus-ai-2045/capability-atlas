@@ -105,6 +105,8 @@ export function App() {
   const [installReviewName, setInstallReviewName] = useState("");
   const [filter, setFilter] = useState("");
   const modalCloseRef = useRef(null);
+  const modalTriggerRef = useRef(null);
+  const modalWasOpenRef = useRef(false);
   const selectedCapability = capabilities[selected.capability];
   const filtered = useMemo(
     () => capabilities.map((item, index) => ({ ...item, index })).filter((item) => `${item.label}${item.sub}`.includes(filter)),
@@ -113,7 +115,15 @@ export function App() {
 
   useEffect(() => {
     const modalOpen = experimentOpen || Boolean(installTarget);
-    if (!modalOpen) return undefined;
+    if (!modalOpen) {
+      if (modalWasOpenRef.current) {
+        modalWasOpenRef.current = false;
+        modalTriggerRef.current?.focus();
+      }
+      return undefined;
+    }
+
+    modalWasOpenRef.current = true;
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -127,6 +137,16 @@ export function App() {
     modalCloseRef.current?.focus();
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [experimentOpen, installTarget]);
+
+  const openExperiment = (event) => {
+    modalTriggerRef.current = event.currentTarget;
+    setExperimentOpen(true);
+  };
+
+  const openInstallReview = (item, event) => {
+    modalTriggerRef.current = event.currentTarget;
+    setInstallTarget(item);
+  };
 
   const requestInstallReview = () => {
     if (!installTarget) return;
@@ -246,7 +266,7 @@ export function App() {
               {["認証・APIキー", "Git push・PR作成", "設定・環境変数の変更", "公開・外部送信", "課金・有料アクション", "クラウド呼び出し"].map((item) => <span key={item}><X />{item}</span>)}
             </div>
           </section>
-          <button className="primary-action" onClick={() => setExperimentOpen(true)}><Play weight="fill" />この1タスクを安全に試す</button>
+          <button className="primary-action" onClick={openExperiment}><Play weight="fill" />この1タスクを安全に試す</button>
           <small className="action-note">実行前に詳細プレビューを表示します</small>
           {experimentResult && (
             <div className="experiment-result" role="status">
@@ -281,9 +301,9 @@ export function App() {
                 <p>{item.description}</p>
                 <div className="catalog-meta"><span>{item.genre}</span><span>{item.status}</span><span>評価 {item.score}</span></div>
                 {installReviewRequested.has(item.name) ? (
-                  <button className="installed-button review-pending-button" aria-label={`${item.name}のレビュー待ち`} disabled><Clock />レビュー待ち</button>
+                  <button className="installed-button review-pending-button" aria-label={`${item.name}のレビュー待ち`} aria-disabled="true"><Clock />レビュー待ち</button>
                 ) : item.status === "未導入" ? (
-                  <button className="install-button" aria-label={`${item.name}をインストール`} onClick={() => setInstallTarget(item)}>インストール</button>
+                  <button className="install-button" aria-label={`${item.name}をインストール`} onClick={(event) => openInstallReview(item, event)}>インストール</button>
                 ) : (
                   <button className="installed-button" disabled><Check />{item.status}</button>
                 )}

@@ -71,6 +71,19 @@ describe("snapshot diff and drift", () => {
       { type: "evidence_stale", capabilityId: "codex.search" },
     ]);
   });
+
+  it("tracks operation changes without mutating snapshot order", () => {
+    const previous = { capabilities: [capability({ id: "b" }), capability({ id: "a" })] };
+    const current = { capabilities: [capability({ id: "b", operation: "auth" }), capability({ id: "a" })] };
+    expect(diffSnapshots(previous, current).changed[0]).toEqual({
+      id: "b",
+      changes: [{ field: "operation", from: undefined, to: "auth" }],
+    });
+    expect(detectDrift(previous, current)).toContainEqual({
+      type: "operation_changed", capabilityId: "b", from: undefined, to: "auth",
+    });
+    expect(current.capabilities.map(({ id }) => id)).toEqual(["b", "a"]);
+  });
 });
 
 describe("orthogonal operational state", () => {
@@ -143,5 +156,26 @@ describe("bounded planner", () => {
       rejected: [{ id: "inventory", reason: "operation_not_allowed" }],
       reason: "no_safe_candidates",
     });
+  });
+
+  it("uses runtime and genre together for diversity", () => {
+    const result = planNextActions({ candidates: [
+      { id: "codex-code", runtime: "codex", genre: "code", operation: "local_read_smoke", target: "a", scope: "local", priority: 10 },
+      { id: "codex-research", runtime: "codex", genre: "research", operation: "local_read_smoke", target: "b", scope: "local", priority: 9 },
+      { id: "claude-code", runtime: "claude", genre: "code", operation: "local_read_smoke", target: "c", scope: "local", priority: 8 },
+    ] });
+    expect(result.actions.map(({ id }) => id)).toEqual(["codex-code", "codex-research", "claude-code"]);
+  });
+
+  it("rejects negative execution bounds", () => {
+    const result = planNextActions({ candidates: [
+      { id: "negative-input", operation: "local_read_smoke", target: "a", scope: "local", inputBytes: -1 },
+      { id: "negative-duration", operation: "local_read_smoke", target: "b", scope: "local", durationMs: -1 },
+    ] });
+    expect(result.route).toBe("blocked_unknown");
+    expect(result.rejected).toEqual([
+      { id: "negative-duration", reason: "duration_bound_exceeded" },
+      { id: "negative-input", reason: "input_bound_exceeded" },
+    ]);
   });
 });

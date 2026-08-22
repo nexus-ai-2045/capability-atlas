@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { detectDrift, diffSnapshots, planNextActions } from "../../src/domain/operations.js";
+import { LIFECYCLE } from "../../src/domain/capability.js";
 
 const MAX_INPUT_BYTES = 1024 * 1024;
 const MAX_CAPABILITIES = 1000;
@@ -25,6 +26,7 @@ function validateCapability(item, index) {
       throw new Error(`invalid capability ${key} at index ${index}`);
     }
   }
+  if (!LIFECYCLE.includes(item.lifecycle)) throw new Error(`invalid capability lifecycle at index ${index}`);
   for (const key of SCORE_FIELDS) {
     if (item[key] !== undefined && (!Number.isFinite(item[key]) || item[key] < 0 || item[key] > 10)) {
       throw new Error(`invalid capability ${key} at index ${index}`);
@@ -36,7 +38,12 @@ async function readSnapshot(inputPath) {
   const inputStat = await stat(inputPath);
   if (!inputStat.isFile() || inputStat.size > MAX_INPUT_BYTES) throw new Error("invalid capability input size");
   const input = await readFile(inputPath, "utf8");
-  const capabilities = JSON.parse(input);
+  const parsed = JSON.parse(input);
+  const capabilities = Array.isArray(parsed) ? parsed : parsed?.capabilities;
+  const collectorStatus = Array.isArray(parsed) ? undefined : parsed?.collectorStatus;
+  if (!Array.isArray(parsed) && !new Set(["success", "failed"]).has(collectorStatus)) {
+    throw new Error("invalid collector status");
+  }
   if (!Array.isArray(capabilities) || capabilities.length === 0 || capabilities.length > MAX_CAPABILITIES) {
     throw new Error("capability fixture must be a bounded non-empty array");
   }
@@ -46,7 +53,7 @@ async function readSnapshot(inputPath) {
     if (ids.has(capability.id)) throw new Error(`duplicate capability id: ${capability.id}`);
     ids.add(capability.id);
   }
-  return { input, capabilities };
+  return { input, capabilities, collectorStatus };
 }
 
 function priority(item) {
@@ -69,6 +76,8 @@ function planningCandidates(capabilities) {
       writesFiles: item.writesFiles,
       sendsExternally: item.sendsExternally,
       paidAction: item.paidAction,
+      inputBytes: item.inputBytes,
+      durationMs: item.durationMs,
     }).filter(([, value]) => value !== undefined)));
 }
 
@@ -112,21 +121,22 @@ async function writeReceipt({ outputDir, allowedOutputRoot, receipt }) {
   return { receiptPath, persisted };
 }
 
-export async function runOnce({ fixturePath, previousFixturePath, outputDir, allowedOutputRoot, now = new Date() }) {
+export async function runOnce({ fixturePath, previousFixturePath, outputDir, allowedOutputRoot, now }) {
+  const startedAt = (now ?? new Date()).toISOString();
   const inputPath = filesystemPath(fixturePath);
-  const { input, capabilities } = await readSnapshot(inputPath);
+  const { input, capabilities, collectorStatus } = await readSnapshot(inputPath);
   const previous = previousFixturePath ? (await readSnapshot(filesystemPath(previousFixturePath))).capabilities : [];
   const previousSnapshot = { capabilities: previous };
-  const currentSnapshot = { capabilities };
+  const currentSnapshot = { capabilities, collectorStatus };
   const plan = planNextActions({ candidates: planningCandidates(capabilities), maxCandidates: 3 });
-  const timestamp = now.toISOString();
+  const finishedAt = (now ?? new Date()).toISOString();
   const receipt = {
     schemaVersion: 1,
     runId: randomUUID(),
     activity: "bounded_receding_horizon_run_once",
     actor: "capability-atlas",
-    startedAt: timestamp,
-    finishedAt: timestamp,
+    startedAt,
+    finishedAt,
     scope: "local-fixture-only",
     source: path.basename(inputPath),
     inputHash: `sha256:${createHash("sha256").update(input).digest("hex")}`,

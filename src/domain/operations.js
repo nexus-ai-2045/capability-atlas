@@ -1,6 +1,6 @@
 import { LIFECYCLE, routeOperation } from "./capability.js";
 
-const TRACKED_FIELDS = ["version", "permissions", "route", "lifecycle"];
+const TRACKED_FIELDS = ["version", "permissions", "route", "operation", "lifecycle"];
 const DRIFT_EVENT_ORDER = [
   "collector_failed",
   "added",
@@ -8,6 +8,7 @@ const DRIFT_EVENT_ORDER = [
   "version_changed",
   "permission_changed",
   "route_changed",
+  "operation_changed",
   "state_regressed",
   "evidence_stale",
 ];
@@ -114,6 +115,9 @@ function eventForChange(id, change) {
   if (change.field === "route") {
     return { type: "route_changed", capabilityId: id, from: change.from, to: change.to };
   }
+  if (change.field === "operation") {
+    return { type: "operation_changed", capabilityId: id, from: change.from, to: change.to };
+  }
   if (change.field === "lifecycle" && lifecycleRank(change.to) < lifecycleRank(change.from)) {
     return { type: "state_regressed", capabilityId: id, from: change.from, to: change.to };
   }
@@ -134,7 +138,7 @@ export function detectDrift(previous = {}, current = {}) {
     }
   }
 
-  for (const capability of capabilitiesOf(current).sort((left, right) => left.id.localeCompare(right.id))) {
+  for (const capability of [...capabilitiesOf(current)].sort((left, right) => left.id.localeCompare(right.id))) {
     if (capability.freshness === "stale") {
       events.push({ type: "evidence_stale", capabilityId: capability.id });
     }
@@ -182,7 +186,7 @@ function rejectReason(action, constraints) {
     ABSOLUTE_MAX_INPUT_BYTES,
     Number.isFinite(constraints.maxInputBytes) ? Math.max(0, constraints.maxInputBytes) : ABSOLUTE_MAX_INPUT_BYTES,
   );
-  if (action.inputBytes !== undefined && (!Number.isFinite(action.inputBytes) || action.inputBytes > inputLimit)) {
+  if (action.inputBytes !== undefined && (!Number.isFinite(action.inputBytes) || action.inputBytes < 0 || action.inputBytes > inputLimit)) {
     return "input_bound_exceeded";
   }
 
@@ -190,7 +194,7 @@ function rejectReason(action, constraints) {
     ABSOLUTE_MAX_DURATION_MS,
     Number.isFinite(constraints.maxDurationMs) ? Math.max(0, constraints.maxDurationMs) : ABSOLUTE_MAX_DURATION_MS,
   );
-  if (action.durationMs !== undefined && (!Number.isFinite(action.durationMs) || action.durationMs > durationLimit)) {
+  if (action.durationMs !== undefined && (!Number.isFinite(action.durationMs) || action.durationMs < 0 || action.durationMs > durationLimit)) {
     return "duration_bound_exceeded";
   }
 
@@ -198,7 +202,7 @@ function rejectReason(action, constraints) {
 }
 
 function diversityKey(action) {
-  return action.diversityKey ?? action.runtime ?? action.genre ?? action.id;
+  return action.diversityKey ?? `${action.runtime ?? "*"}::${action.genre ?? "*"}`;
 }
 
 export function planNextActions({ candidates = [], constraints = {}, maxCandidates = 3 } = {}) {

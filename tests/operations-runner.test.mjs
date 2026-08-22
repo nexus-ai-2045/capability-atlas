@@ -86,3 +86,30 @@ test("重複idをfail closedにする", async () => {
     allowedOutputRoot: outputDir,
   }), /duplicate capability id/);
 });
+
+test("不正lifecycleを拒否し、宣言された実行上限をplannerへ渡す", async () => {
+  const outputDir = await mkdtemp(path.join(tmpdir(), "atlas-runner-"));
+  await assert.rejects(runOnce({
+    fixturePath: new URL("./fixtures/invalid-lifecycle.json", import.meta.url), outputDir, allowedOutputRoot: outputDir,
+  }), /invalid capability lifecycle/);
+  const result = await runOnce({
+    fixturePath: new URL("./fixtures/over-bounds.json", import.meta.url), outputDir, allowedOutputRoot: outputDir,
+  });
+  assert.equal(result.receipt.plan.route, "blocked_unknown");
+  assert.deepEqual(result.receipt.plan.rejected, [{ id: "bounded", reason: "input_bound_exceeded" }]);
+});
+
+test("collector failureをdrift evidenceとして保存する", async () => {
+  const outputDir = await mkdtemp(path.join(tmpdir(), "atlas-runner-"));
+  const result = await runOnce({
+    fixturePath: new URL("./fixtures/collector-failed.json", import.meta.url), outputDir, allowedOutputRoot: outputDir,
+  });
+  assert.ok(result.receipt.driftEvents.some(({ type }) => type === "collector_failed"));
+});
+
+test("未知のcollector statusをfail closedにする", async () => {
+  const outputDir = await mkdtemp(path.join(tmpdir(), "atlas-runner-"));
+  await assert.rejects(runOnce({
+    fixturePath: new URL("./fixtures/collector-invalid.json", import.meta.url), outputDir, allowedOutputRoot: outputDir,
+  }), /invalid collector status/);
+});
