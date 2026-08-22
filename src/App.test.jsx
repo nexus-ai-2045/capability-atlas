@@ -11,6 +11,20 @@ describe("Capability Atlas", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "能力マップ（ライフサイクル別）" })).toBeVisible();
+    expect(screen.getByText("サンプル・未実測")).toBeVisible();
+    for (const label of [
+      "発見",
+      "インストール済み",
+      "ワイヤ済み",
+      "有効化",
+      "読み込み済み",
+      "スモーク済み",
+      "採用",
+      "観察中",
+    ]) {
+      expect(screen.getAllByText(label, { exact: true }).length).toBeGreaterThan(0);
+    }
+    expect(screen.getByText("未確認（証拠なし）")).toBeVisible();
     expect(screen.getByText("何が変わった")).toBeVisible();
     expect(screen.getByText("人の判断が必要な境界")).toBeVisible();
 
@@ -18,6 +32,7 @@ describe("Capability Atlas", () => {
 
     const dialog = screen.getByRole("dialog", { name: "安全実験のプレビュー" });
     expect(dialog).toBeVisible();
+    expect(screen.getByRole("button", { name: "閉じる" })).toHaveFocus();
     expect(within(dialog).getByText("外部送信なし")).toBeVisible();
     expect(screen.getByRole("button", { name: "ローカル実験を開始" })).toBeEnabled();
 
@@ -26,6 +41,16 @@ describe("Capability Atlas", () => {
     expect(screen.queryByRole("dialog", { name: "安全実験のプレビュー" })).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("ローカル実験を完了");
     expect(screen.getByRole("status")).toHaveTextContent("外部送信なし");
+  });
+
+  it("closes the safe experiment preview with Escape", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "この1タスクを安全に試す" }));
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog", { name: "安全実験のプレビュー" })).not.toBeInTheDocument();
   });
 
   it("opens the skill and MCP catalog and stops at an install review", async () => {
@@ -40,6 +65,13 @@ describe("Capability Atlas", () => {
     const dialog = screen.getByRole("dialog", { name: "インストール前の確認" });
     expect(within(dialog).getByText("変更先")).toBeVisible();
     expect(within(dialog).getByText("人間レビューが必要")).toBeVisible();
-    expect(within(dialog).getByRole("button", { name: "確認して進む" })).toBeEnabled();
+    expect(within(dialog).getByText("変更はまだ実行されません")).toBeVisible();
+    expect(within(dialog).getByRole("button", { name: "レビュー候補に追加（この画面内のみ）" })).toBeEnabled();
+
+    await user.click(within(dialog).getByRole("button", { name: "レビュー候補に追加（この画面内のみ）" }));
+
+    expect(screen.queryByRole("dialog", { name: "インストール前の確認" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("この画面内のレビュー候補に追加しました");
+    expect(screen.getByRole("button", { name: "Playwright MCPのレビュー待ち" })).toBeDisabled();
   });
 });

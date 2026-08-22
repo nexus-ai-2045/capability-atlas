@@ -7,3 +7,5 @@ dist/
 coverage/
 artifacts/screenshots/*.png
 !artifacts/screenshots/.gitkeep
+artifacts/evidence/*.json
+artifacts/evidence/*.tmp

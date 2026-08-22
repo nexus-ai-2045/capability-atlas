@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:sites": "node --test tests/sites-worker.test.mjs"
+    "test:sites": "node --test tests/sites-worker.test.mjs",
+    "test:ops": "node --test tests/operations-runner.test.mjs",
+    "smoke:ops": "node scripts/atlas-run-once.mjs",
+    "verify": "npm test && npm run test:ops && npm run build && npm run test:sites"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",

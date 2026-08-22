@@ -12,7 +12,15 @@
 - Normalizer: 異なるAIの概念を共通能力と状態へ変換する。
 - Diff engine: 前回観測と比較し、追加・後退・不明化を原子的に記録する。
 - Safety router: 操作を`safe_local`、`human_review`、`blocked_unknown`へ振り分ける。
-- Smoke runner: 有界な1タスクを実行して証拠を保存する。
+- Smoke runner: 現MVPでは有界な次手を計画して証拠を保存する。将来executor導入後も1操作だけ実行する。
 - Atlas UI: 地図、理由、実験、人間レビューを一続きで表示する。
 
-現在のMVPは状態モデル、Safety router、Atlas UIまでを実装しています。
+運用MVPは、状態モデル、Safety router、Atlas UIに加えて、fixture collector、決定的な短期planner、snapshot差分、drift分類、原子的なJSON計画証跡、`run-once`入口までを対象にします。操作executor、定期実行、実インストールは運用MVPの外側で、人間レビュー後に既存runner・schedulerへ接続します。
+
+## MPCとFDEの役割
+
+- MPC（モデル予測制御）型ループ: 最大3候補を短く先読みし、現MVPでは次の1操作を計画する。将来executor導入後は1操作だけ実行して再計画する。正式な数理MPC solverは導入しない。
+- Fractal Decision Ecosystem（FDE）: `source / lifecycle / risk / evidence / freshness`へ探索軸を絞り、全組合せ探索を避ける。
+- lifecycleと`freshness / health / drift / evidenceStatus`は直交させ、状態数の爆発を防ぐ。
+
+詳細は[運用契約](./OPERATIONS.md)とADRを参照してください。

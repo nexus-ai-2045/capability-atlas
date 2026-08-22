@@ -100,6 +100,7 @@ describe("bounded planner", () => {
     expect(result.route).toBe("safe_local");
     expect(result.actions.map(({ id }) => id)).toEqual(["a", "b", "c"]);
     expect(result.actions).toHaveLength(3);
+    expect(result.humanReview).toEqual([]);
   });
 
   it("fails closed when an action is unknown or has any hard-constraint violation", () => {
@@ -113,10 +114,33 @@ describe("bounded planner", () => {
     expect(result).toEqual({
       route: "blocked_unknown",
       actions: [],
+      humanReview: [],
       rejected: [
         { id: "network", reason: "network_not_allowed" },
         { id: "unknown", reason: "operation_not_allowed" },
       ],
+      reason: "no_safe_candidates",
+    });
+  });
+
+  it("keeps guarded operations as explicit human-review material", () => {
+    const result = planNextActions({ candidates: [
+      { id: "safe", operation: "local_read_smoke", target: "safe", scope: "local" },
+      { id: "auth", operation: "auth", target: "account", scope: "external" },
+    ] });
+    expect(result.route).toBe("safe_local");
+    expect(result.actions.map(({ id }) => id)).toEqual(["safe"]);
+    expect(result.humanReview.map(({ id }) => id)).toEqual(["auth"]);
+  });
+
+  it("uses the shared safety router as the safe-operation source of truth", () => {
+    expect(planNextActions({ candidates: [
+      { id: "inventory", operation: "inventory_read", target: "local", scope: "local" },
+    ] })).toEqual({
+      route: "blocked_unknown",
+      actions: [],
+      humanReview: [],
+      rejected: [{ id: "inventory", reason: "operation_not_allowed" }],
       reason: "no_safe_candidates",
     });
   });

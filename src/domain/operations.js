@@ -1,4 +1,4 @@
-import { LIFECYCLE } from "./capability.js";
+import { LIFECYCLE, routeOperation } from "./capability.js";
 
 const TRACKED_FIELDS = ["version", "permissions", "route", "lifecycle"];
 const DRIFT_EVENT_ORDER = [
@@ -21,7 +21,6 @@ const DEFAULT_STATE = {
   route: "blocked_unknown",
 };
 
-const ALLOWED_OPERATIONS = new Set(["inventory_read", "local_read_smoke"]);
 const HARD_CONSTRAINTS = [
   ["usesNetwork", "network_not_allowed"],
   ["requiresAuth", "auth_not_allowed"],
@@ -168,7 +167,7 @@ export function createOperationalState(input = {}) {
 
 function rejectReason(action, constraints) {
   if (!action || typeof action !== "object") return "action_invalid";
-  if (!ALLOWED_OPERATIONS.has(action.operation)) return "operation_not_allowed";
+  if (routeOperation(action.operation).route !== "safe_local") return "operation_not_allowed";
   if (typeof action.target !== "string" || action.target.length === 0) return "target_required";
   if (typeof action.scope !== "string" || action.scope.length === 0) return "scope_required";
 
@@ -206,14 +205,20 @@ export function planNextActions({ candidates = [], constraints = {}, maxCandidat
   const limit = Math.min(3, Math.max(0, Number.isInteger(maxCandidates) ? maxCandidates : 0));
   const accepted = [];
   const rejected = [];
+  const humanReview = [];
 
   for (const action of candidates) {
+    if (routeOperation(action?.operation).route === "human_review") {
+      humanReview.push(action);
+      continue;
+    }
     const reason = rejectReason(action, constraints);
     if (reason) rejected.push({ id: action?.id ?? "*", reason });
     else accepted.push(action);
   }
 
   rejected.sort((left, right) => left.id.localeCompare(right.id));
+  humanReview.sort((left, right) => String(left.id).localeCompare(String(right.id)));
   accepted.sort((left, right) => {
     const priority = (Number.isFinite(right.priority) ? right.priority : 0) - (Number.isFinite(left.priority) ? left.priority : 0);
     if (priority !== 0) return priority;
@@ -235,7 +240,8 @@ export function planNextActions({ candidates = [], constraints = {}, maxCandidat
   }
 
   if (actions.length === 0) {
-    return { route: "blocked_unknown", actions: [], rejected, reason: "no_safe_candidates" };
+    if (humanReview.length > 0) return { route: "human_review", actions: [], humanReview, rejected, reason: "human_review_required" };
+    return { route: "blocked_unknown", actions: [], humanReview, rejected, reason: "no_safe_candidates" };
   }
-  return { route: "safe_local", actions, rejected, reason: "bounded_plan_ready" };
+  return { route: "safe_local", actions, humanReview, rejected, reason: "bounded_plan_ready" };
 }
