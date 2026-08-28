@@ -8,16 +8,52 @@ on:
 permissions:
   contents: read
 
+env:
+  AI_RATCHET_GATE_WHEEL_URL: https://github.com/nexus-ai-2045/ai-ratchet-gate/releases/download/v0.1.1/ai_ratchet_gate-0.1.1-py3-none-any.whl
+  AI_RATCHET_GATE_WHEEL_SHA256: b3f22ab772699d57906326e42189e0ab7a0ee9e33dcad55a90909ece35106cd7
+
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+
       - run: npm ci
       - run: npm run verify
       - run: npm run smoke:ops
+
+      - name: Install pinned ai-ratchet-gate wheel
+        run: |
+          set -euo pipefail
+          WHEEL_PATH="/tmp/ai_ratchet_gate-0.1.1-py3-none-any.whl"
+          curl -fsSL -o "$WHEEL_PATH" "$AI_RATCHET_GATE_WHEEL_URL"
+          echo "${AI_RATCHET_GATE_WHEEL_SHA256}  ${WHEEL_PATH}" | sha256sum -c -
+          python -m pip install --no-deps "$WHEEL_PATH"
+
+      - name: ai-ratchet-gate (fail-closed on NEW tracked∧ignored)
+        run: python -m ai_ratchet_gate --repo .
+
+      - name: Checkout repo-preflight (upstream, no logic copy)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: nexus-ai-2045/repo-preflight
+          path: .tools/repo-preflight
+          persist-credentials: false
+
+      - name: repo-preflight (shadow consistency + readiness evidence)
+        run: |
+          set -euo pipefail
+          BASE_REF="origin/${{ github.event.pull_request.base.ref || 'main' }}"
+          python tools/run_repo_preflight.py --repo . --base-ref "$BASE_REF"

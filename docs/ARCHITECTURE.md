@@ -20,7 +20,7 @@
 ## MPCとFDEの役割
 
 - MPC（モデル予測制御）型ループ: 最大3候補を短く先読みし、現MVPでは次の1操作を計画する。将来executor導入後は1操作だけ実行して再計画する。正式な数理MPC solverは導入しない。
-- Fractal Decision Ecosystem（FDE）: `source / lifecycle / risk / evidence / freshness`へ探索軸を絞り、全組合せ探索を避ける。
+- Fractal Decision Ecosystem（FDE）: 判断OSの外部正本（`nexus-ai-2045/fractal-decision-ecosystem`）。このrepoでは探索軸の縮約参考として参照し、第二フレームワークを置かない。
 - lifecycleと`freshness / health / drift / evidenceStatus`は直交させ、状態数の爆発を防ぐ。
 
-詳細は[運用契約](./OPERATIONS.md)とADRを参照してください。
+詳細は[運用契約](./OPERATIONS.md)、[外部契約](./DEPENDENCIES.md)、ADRを参照してください。

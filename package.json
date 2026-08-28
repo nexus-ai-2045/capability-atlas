@@ -11,8 +11,10 @@
     "test:watch": "vitest",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "test:ops": "node --test tests/operations-runner.test.mjs",
+    "test:gates": "node --test tests/operational-gates.test.mjs",
     "smoke:ops": "node scripts/atlas-run-once.mjs",
-    "verify": "npm test && npm run test:ops && npm run build && npm run test:sites"
+    "gate:preflight": "python tools/run_repo_preflight.py --repo .",
+    "verify": "npm test && npm run test:ops && npm run test:gates && npm run build && npm run test:sites"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",

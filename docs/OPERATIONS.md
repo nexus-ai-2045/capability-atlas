@@ -31,7 +31,14 @@ flowchart LR
 
 ## 既存資産との接続
 
-このrepoへ共有基盤を複製しません。Projects環境では、証跡台帳を`shared/lib/event_ledger.py`、運用smokeを`shared/scripts/docs_to_smoke_loop.py`、scheduler driftを`shared/scripts/codex_runtime_feedback_smoke.py`、PR直前検査を`repo-preflight`へ委譲します。接続不能な環境でも製品本体のfixture smokeとテストは単独で再現できます。
+このrepoへ共有基盤・検査エンジン・判断OSを複製しません。正本ポインタは[DEPENDENCIES.md](./DEPENDENCIES.md)です。
+
+- PR/公開前の機械検査: upstream `repo-preflight`（`tools/run_repo_preflight.py`）
+- tracked∧ignored の新規悪化防止: Release固定の `ai-ratchet-gate`
+- 判断OS: FDE（ポインタのみ）
+- 開発保証の組立: engineering-brain（任意消費）
+
+接続不能な環境でも、製品本体の fixture smoke（`npm run smoke:ops`）と `npm run verify` は単独で再現できます。preflight/ratchet の `pass` は merge / public 承認ではありません。
 
 ## 定期実行へ進む条件
 

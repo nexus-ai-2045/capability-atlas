@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nexus-ai-2045/repo-preflight/main/schemas/repository-consistency.schema.json",
+  "schema": "repo-preflight.consistency/v1",
+  "mode": "shadow",
+  "ratchet": {"baseline": []},
+  "markdown": {
+    "include": [
+      "README.md",
+      "CONTRIBUTING.md",
+      "PREFLIGHT.md",
+      "AGENTS.md",
+      "SECURITY.md",
+      "docs/**/*.md"
+    ]
+  },
+  "readme_contracts": {
+    "required_paths": [
+      "scripts/atlas-run-once.mjs",
+      "scripts/lib/operations-runner.mjs",
+      "tools/run_repo_preflight.py",
+      ".ai-ratchet-gate/baseline.txt",
+      "requirements-tools.txt"
+    ],
+    "commands": [
+      {
+        "text": "npm run verify",
+        "paths": ["package.json"]
+      },
+      {
+        "text": "npm run smoke:ops",
+        "paths": ["scripts/atlas-run-once.mjs", "scripts/lib/operations-runner.mjs"]
+      },
+      {
+        "text": "python tools/run_repo_preflight.py --repo .",
+        "paths": ["tools/run_repo_preflight.py"]
+      },
+      {
+        "text": "python -m ai_ratchet_gate --repo .",
+        "paths": ["requirements-tools.txt", ".ai-ratchet-gate/baseline.txt"]
+      }
+    ]
+  },
+  "impact_map": [
+    {
+      "change": ["src/**", "scripts/**"],
+      "requires_any": ["README.md", "docs/**", "tests/**"]
+    },
+    {
+      "change": ["tools/**", ".github/workflows/**", "requirements-tools.txt", ".ai-ratchet-gate/**", ".repo-preflight-consistency.json"],
+      "requires_any": ["README.md", "CONTRIBUTING.md", "PREFLIGHT.md", "tests/**", "docs/DEPENDENCIES.md"]
+    }
+  ],
+  "generated_artifacts": []
+}
