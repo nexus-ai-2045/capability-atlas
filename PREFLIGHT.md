@@ -34,7 +34,7 @@ npm run smoke:ops
 
 - reviewer:
 - reviewed_at:
-- exact HEAD / PR diff: `07857502238c5a689c973d7e736965fba4c8864d`
+- exact HEAD / PR diff: `b608c163d6cd444f428d483b5cc3d2c572b8aa9e`
 - decision: `approve / changes_requested`
 - 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、remote CI は billing 復旧待ち
 - 次に承認する正確な操作: **merge**（current-turn 明示承認）。**public / visibility** は別承認。
