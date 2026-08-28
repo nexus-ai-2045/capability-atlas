@@ -16,3 +16,12 @@ When implementing from a selected generated mock, treat that image as the source
 - The selected visual truth is `design/reference/capability-atlas-integrated.png`.
 
 Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs`, and `tests/sites-worker.test.mjs` intact so the same local prototype can be handed to Sites. Before a Sites handoff, run `npm run build` and `npm run test:sites`; the build must leave `dist/client/index.html`, `dist/server/index.js`, and `dist/.openai/hosting.json`.
+
+## Operational contracts (do not reinvent)
+
+- Loop: inventory → diff → classify → safe smoke → evidence → human review → observation. Unknown ops stay `blocked_unknown`.
+- Consume, do not copy: `repo-preflight` via `tools/run_repo_preflight.py`; `ai-ratchet-gate` via Release wheel in `requirements-tools.txt` + `.ai-ratchet-gate/baseline.txt`.
+- FDE (`nexus-ai-2045/fractal-decision-ecosystem`) is the decision OS pointer only — do not invent a second framework here.
+- Ops/SSOT mainline stays outside this repo (`nexus-management-os` / `nexus_ai`). Do not create a second SSOT here.
+- For run/research/closeout/PR packet assembly, use `engineering-brain` rather than fake assurance in prose.
+- Canonical pointers: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md). Human merge and public remain human.
