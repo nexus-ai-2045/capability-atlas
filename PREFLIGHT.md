@@ -27,9 +27,16 @@ npm run verify
 npm run smoke:ops
 ```
 
+CI（上流接続・ロジック非コピー）:
+
+- `.github/workflows/ci.yml` — 製品 verify / smoke
+- `.github/workflows/ai-ratchet-gate.yml` — Release wheel の ratchet
+- `.github/workflows/repo-preflight-consistency.yml` — 既存 `.repo-preflight-consistency.json` を upstream `consistency_gate.py` へ接続（空 base fail-closed）
+
 - `ai-ratchet-gate` は PyPI 名では入れない（Release wheel URL のみ）。
 - `tools/run_repo_preflight.py` は upstream `nexus-ai-2045/repo-preflight` を呼び出す薄いラッパ。検査ロジックはコピーしない。
 - consistency は当面 `shadow`。所見は観測し、merge 承認には使わない。
+- 開発保証パッケージは CI に埋め込まない。
 - readiness_scan の `pass` / `blocked` は機械範囲のみ。push / PR / merge / visibility 変更の承認ではない。
 
 ## 人間目視

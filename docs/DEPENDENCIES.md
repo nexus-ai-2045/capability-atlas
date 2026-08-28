@@ -19,7 +19,12 @@ python -m ai_ratchet_gate --repo .
 python tools/run_repo_preflight.py --repo .
 ```
 
-`.tools/` は gitignore。CI も同じ upstream を checkout して呼ぶ。
+`.tools/` は gitignore。CI は上流流儀の専用 workflow で接続する（検査ロジック非コピー）:
+
+- `.github/workflows/ai-ratchet-gate.yml`
+- `.github/workflows/repo-preflight-consistency.yml`（`.repo-preflight-consistency.json` を upstream `consistency_gate.py` へ接続。空 base は fail-closed）
+
+製品 CI（`.github/workflows/ci.yml`）へ開発保証パッケージは埋め込まない。
 
 ## 保証しないこと
 

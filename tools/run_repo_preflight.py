@@ -16,6 +16,7 @@ from pathlib import Path
 
 UPSTREAM = "https://github.com/nexus-ai-2045/repo-preflight.git"
 DEFAULT_CACHE = Path(".tools") / "repo-preflight"
+ZERO_SHA = "0" * 40
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,20 +27,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--intent", default=None)
     args = parser.parse_args(argv)
 
+    base_ref = (args.base_ref or "").strip()
+    if not base_ref or base_ref == ZERO_SHA:
+        print("empty consistency base: fail-closed", file=sys.stderr)
+        return 1
+
     repo = args.repo.resolve()
     cache = (repo / args.cache).resolve() if not args.cache.is_absolute() else args.cache.resolve()
     ensure_checkout(cache)
 
     scan_cmd = [sys.executable, str(cache / "scripts" / "readiness_scan.py"), "--repo", str(repo)]
     if args.intent:
-        scan_cmd.extend(["--intent", args.intent, "--base-ref", args.base_ref])
+        scan_cmd.extend(["--intent", args.intent, "--base-ref", base_ref])
     consistency_cmd = [
         sys.executable,
         str(cache / "scripts" / "consistency_gate.py"),
         "--repo",
         str(repo),
         "--base-ref",
-        args.base_ref,
+        base_ref,
+        "--require-config",
+        "--require-mode",
+        "shadow",
         "--json",
     ]
 
@@ -55,32 +64,49 @@ def main(argv: list[str] | None = None) -> int:
     if consistency.stderr:
         print(consistency.stderr, file=sys.stderr)
 
-    # Shadow / readiness findings are human materials, not merge approval.
-    # Fail only when upstream scripts could not be executed at all.
-    if scan.returncode < 0 or consistency.returncode < 0:
-        return 1
     if not (cache / "scripts" / "readiness_scan.py").is_file():
         return 1
+    if scan.returncode < 0 or consistency.returncode < 0:
+        return 1
+
     try:
-        payload = json.loads(consistency.stdout.strip().splitlines()[-1]) if consistency.stdout.strip() else {}
+        payload = json.loads(consistency.stdout.strip()) if consistency.stdout.strip() else {}
     except json.JSONDecodeError:
-        payload = {}
+        print("consistency_gate returned non-JSON: fail-closed", file=sys.stderr)
+        return 1
+
+    status = payload.get("status")
     mode = payload.get("mode")
     print(
         f"==> repo-preflight wrapper done "
         f"(readiness_rc={scan.returncode}, consistency_rc={consistency.returncode}, "
-        f"mode={mode!r}; not a merge approval)"
+        f"status={status!r}, mode={mode!r}; not a merge approval)"
     )
-    return 0
+    # shadow_findings are observational; tool_error/fail/missing config stop the gate.
+    if status in {"pass", "shadow_findings"}:
+        return 0
+    return 1
 
 
 def ensure_checkout(cache: Path) -> None:
     cache.parent.mkdir(parents=True, exist_ok=True)
     if (cache / "scripts" / "readiness_scan.py").is_file():
-        subprocess.run(["git", "-C", str(cache), "fetch", "--depth", "1", "origin"], check=False)
-        subprocess.run(["git", "-C", str(cache), "checkout", "FETCH_HEAD"], check=False)
+        subprocess.run(
+            ["git", "-C", str(cache), "fetch", "--depth", "1", "origin"],
+            check=False,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(cache), "checkout", "FETCH_HEAD"],
+            check=False,
+            capture_output=True,
+        )
         return
-    subprocess.run(["git", "clone", "--depth", "1", UPSTREAM, str(cache)], check=True)
+    subprocess.run(
+        ["git", "clone", "--depth", "1", UPSTREAM, str(cache)],
+        check=True,
+        capture_output=True,
+    )
 
 
 if __name__ == "__main__":

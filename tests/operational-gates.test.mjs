@@ -25,12 +25,15 @@ test("requirements-tools pins Release wheel with sha256 (no PyPI bare name)", ()
   assert.doesNotMatch(req, /^ai-ratchet-gate\s*$/m);
 });
 
-test("repo-preflight wrapper points upstream and does not embed scanner", () => {
+test("repo-preflight wrapper points upstream and fail-closes empty base", () => {
   const wrapper = read("tools/run_repo_preflight.py");
   assert.match(wrapper, /nexus-ai-2045\/repo-preflight/);
   assert.match(wrapper, /readiness_scan\.py/);
   assert.match(wrapper, /consistency_gate\.py/);
   assert.match(wrapper, /without copying its inspection logic|検査ロジックはコピーしない|Do not copy/i);
+  assert.match(wrapper, /empty consistency base: fail-closed/);
+  assert.match(wrapper, /--require-config/);
+  assert.match(wrapper, /--require-mode/);
   assert.equal(existsSync(path.join(root, "scripts/readiness_scan.py")), false);
   assert.equal(existsSync(path.join(root, "scripts/consistency_gate.py")), false);
 });
@@ -43,12 +46,26 @@ test("consistency config is shadow consumer contract", () => {
   assert.ok(config.readme_contracts.required_paths.includes(".ai-ratchet-gate/baseline.txt"));
 });
 
-test("CI wires ratchet and preflight without merge approval claims", () => {
-  const ci = read(".github/workflows/ci.yml");
-  assert.match(ci, /ai_ratchet_gate|ai-ratchet-gate/);
-  assert.match(ci, /run_repo_preflight\.py|repo-preflight/);
-  assert.match(ci, /b3f22ab772699d57906326e42189e0ab7a0ee9e33dcad55a90909ece35106cd7/);
-  assert.doesNotMatch(ci, /auto-merge|visibility:\s*public/i);
+test("upstream-style gate workflows connect without embedding engineering-brain", () => {
+  const productCi = read(".github/workflows/ci.yml");
+  const ratchet = read(".github/workflows/ai-ratchet-gate.yml");
+  const consistency = read(".github/workflows/repo-preflight-consistency.yml");
+
+  assert.match(productCi, /npm run verify/);
+  assert.doesNotMatch(productCi, /engineering-brain|engineering_brain/);
+  assert.doesNotMatch(productCi, /ai-ratchet-gate|repo-preflight/);
+
+  assert.match(ratchet, /AI_RATCHET_GATE_WHEEL_SHA256: b3f22ab772699d57906326e42189e0ab7a0ee9e33dcad55a90909ece35106cd7/);
+  assert.match(ratchet, /python -m ai_ratchet_gate --repo \./);
+  assert.doesNotMatch(ratchet, /engineering-brain|engineering_brain/);
+
+  assert.match(consistency, /nexus-ai-2045\/repo-preflight/);
+  assert.match(consistency, /consistency_gate\.py/);
+  assert.match(consistency, /\.repo-preflight-consistency\.json/);
+  assert.match(consistency, /empty consistency base: fail-closed/);
+  assert.match(consistency, /--require-mode shadow/);
+  assert.doesNotMatch(consistency, /engineering-brain|engineering_brain/);
+  assert.doesNotMatch(consistency, /auto-merge|visibility:\s*public/i);
 });
 
 test("canonical dependency pointers exist and forbid second OS/SSOT", () => {
@@ -62,12 +79,9 @@ test("canonical dependency pointers exist and forbid second OS/SSOT", () => {
   assert.equal(existsSync(path.join(root, "operating-card.md")), false);
 });
 
-test("required readiness documents exist", () => {
+test("required readiness documents exist without inventing PUBLIC_READY", () => {
   for (const file of ["README.md", "LICENSE", "SECURITY.md", "CONTRIBUTING.md", "PREFLIGHT.md"]) {
-    assert.equal(existsSync(path.join(root, file)), true, missing(file));
+    assert.equal(existsSync(path.join(root, file)), true, `${file} must exist`);
   }
+  assert.equal(existsSync(path.join(root, "PUBLIC_READY.md")), false);
 });
-
-function missing(file) {
-  return `${file} must exist`;
-}
