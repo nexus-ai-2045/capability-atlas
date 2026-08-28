@@ -38,17 +38,13 @@ inventory → diff → classify → safe smoke → evidence → human review →
 
 ## 運用ゲート（依存消費）
 
-検査エンジンや判断OSは複製しません。正本へのポインタは [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) です。
+検査エンジンや判断OSは複製しません。**正本は [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)** です。
 
 ```bash
 python -m pip install --require-hashes -r requirements-tools.txt
 python -m ai_ratchet_gate --repo .
 python tools/run_repo_preflight.py --repo .
 ```
-
-- `ai-ratchet-gate`: 既存の tracked∧ignored は baseline で grandfather。**新規**だけ fail-closed。
-- `repo-preflight`: upstream を呼ぶ薄いラッパ。consistency は当面 `shadow`。
-- Fractal Decision Ecosystem（FDE）: 判断OSの外部正本。第二フレームワークを作らない。
 
 これらの `pass` は merge / public / visibility 変更の承認ではありません。
 
