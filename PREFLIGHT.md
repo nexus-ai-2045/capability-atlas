@@ -2,7 +2,7 @@
 
 # 公開準備状況
 
-- HEAD: `b608c16c`（`codex/operational-mvp` 先端）
+- HEAD: `codex/operational-mvp` の PR tip（GitHub PR #1 head SHA を正）
 - 確認日時: 2026-08-28
 - 判定: `blocked`（human review / merge 承認待ち。public は別承認）
 
@@ -34,7 +34,7 @@ npm run smoke:ops
 
 - reviewer:
 - reviewed_at:
-- exact HEAD / PR diff: `07857502238c5a689c973d7e736965fba4c8864d`
+- exact HEAD / PR diff: PR #1 の最新 head SHA
 - decision: `approve / changes_requested`
 - 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、remote CI は billing 復旧待ち
 - 次に承認する正確な操作: **merge**（current-turn 明示承認）。**public / visibility** は別承認。
