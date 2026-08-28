@@ -3,6 +3,7 @@
   "schema": "repo-preflight.consistency/v1",
   "mode": "shadow",
   "ratchet": {"baseline": []},
+<<<<<<< HEAD
   "markdown": {
     "include": [
       "README.md",
@@ -51,4 +52,7 @@
     }
   ],
   "generated_artifacts": []
+=======
+  "markdown": {"include": ["README.md", "docs/**/*.md"]}
+>>>>>>> origin/main
 }
