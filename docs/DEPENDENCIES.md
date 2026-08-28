@@ -9,7 +9,7 @@
 | Fractal Decision Ecosystem（FDE） | [nexus-ai-2045/fractal-decision-ecosystem](https://github.com/nexus-ai-2045/fractal-decision-ecosystem) | 判断OSのポインタのみ。第二フレームワークを発明しない |
 | engineering-brain | [nexus-ai-2045/engineering-brain](https://github.com/nexus-ai-2045/engineering-brain) | run / research / closeout / PR packet 組立に使う。散文で保証を偽らない |
 | nexus-management-os / nexus_ai | メインライン ops / SSOT | 第二SSOTをこの repo に作らない |
-| github-ops | 既存手順 | 新しい comment-resolution プロトコルを追加しない |
+| github-ops | 既存の GitHub 運用契約（独立リポジトリ名ではない） | 新しい comment-resolution プロトコルを追加しない |
 
 ## ローカル実行入口
 
