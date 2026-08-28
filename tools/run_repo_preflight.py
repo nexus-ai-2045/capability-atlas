@@ -33,9 +33,6 @@ def main(argv: list[str] | None = None) -> int:
     scan_cmd = [sys.executable, str(cache / "scripts" / "readiness_scan.py"), "--repo", str(repo)]
     if args.intent:
         scan_cmd.extend(["--intent", args.intent, "--base-ref", args.base_ref])
-    else:
-        # Keep full-repo scan; only change-sensitive consistency needs the remote base.
-        scan_cmd.extend(["--consistency-base-ref", args.base_ref])
     consistency_cmd = [
         sys.executable,
         str(cache / "scripts" / "consistency_gate.py"),
