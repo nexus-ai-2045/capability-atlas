@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowsClockwise,
   BookOpenText,
@@ -47,16 +47,39 @@ const catalogItems = [
   { name: "Figma MCP", type: "MCP", genre: "デザイン", status: "接続済み", score: "未測定", description: "Figmaの設計情報を実装工程へ接続します。" },
 ];
 
+const lifecycleStages = [
+  { key: "discovered", label: "発見", icon: <Info /> },
+  { key: "installed", label: "インストール済み", icon: <PaperPlaneTilt /> },
+  { key: "wired", label: "ワイヤ済み", icon: <Link /> },
+  { key: "enabled", label: "有効化", icon: <SlidersHorizontal /> },
+  { key: "loaded", label: "読み込み済み", icon: <CircleDashed /> },
+  { key: "smoke_tested", label: "スモーク済み", icon: <ShieldCheck /> },
+  { key: "adopted", label: "採用", icon: <Check /> },
+  { key: "observed", label: "観察中", icon: <ChartBar /> },
+];
+
 const stateMeta = {
-  adopted: { label: "採用済み", symbol: <Check weight="bold" /> },
+  discovered: { label: "発見済み", symbol: <Info weight="bold" /> },
   installed: { label: "インストール済み", symbol: <PaperPlaneTilt weight="bold" /> },
   wired: { label: "ワイヤ済み", symbol: <Link weight="bold" /> },
+  enabled: { label: "有効化済み", symbol: <SlidersHorizontal weight="bold" /> },
+  loaded: { label: "読み込み済み", symbol: <CircleDashed weight="bold" /> },
+  smoke_tested: { label: "スモーク済み", symbol: <ShieldCheck weight="bold" /> },
+  adopted: { label: "採用済み", symbol: <Check weight="bold" /> },
   observed: { label: "観察中", symbol: <ChartBar weight="bold" /> },
-  unknown: { label: "未確認", symbol: <CircleDashed weight="bold" /> },
 };
 
+const unknownEvidenceMeta = {
+  label: "未確認（証拠なし）",
+  symbol: <CircleDashed weight="bold" />,
+};
+
+function statePresentation(state) {
+  return stateMeta[state] ?? unknownEvidenceMeta;
+}
+
 function StateCell({ state, selected, onClick, label }) {
-  const meta = stateMeta[state];
+  const meta = statePresentation(state);
   return (
     <button
       className={`state-cell state-${state} ${selected ? "is-selected" : ""}`}
@@ -78,12 +101,59 @@ export function App() {
   const [experimentOpen, setExperimentOpen] = useState(false);
   const [experimentResult, setExperimentResult] = useState(null);
   const [installTarget, setInstallTarget] = useState(null);
+  const [installReviewRequested, setInstallReviewRequested] = useState(() => new Set());
+  const [installReviewName, setInstallReviewName] = useState("");
   const [filter, setFilter] = useState("");
+  const modalCloseRef = useRef(null);
+  const modalTriggerRef = useRef(null);
+  const modalWasOpenRef = useRef(false);
   const selectedCapability = capabilities[selected.capability];
   const filtered = useMemo(
     () => capabilities.map((item, index) => ({ ...item, index })).filter((item) => `${item.label}${item.sub}`.includes(filter)),
     [filter],
   );
+
+  useEffect(() => {
+    const modalOpen = experimentOpen || Boolean(installTarget);
+    if (!modalOpen) {
+      if (modalWasOpenRef.current) {
+        modalWasOpenRef.current = false;
+        modalTriggerRef.current?.focus();
+      }
+      return undefined;
+    }
+
+    modalWasOpenRef.current = true;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setExperimentOpen(false);
+        setInstallTarget(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    modalCloseRef.current?.focus();
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [experimentOpen, installTarget]);
+
+  const openExperiment = (event) => {
+    modalTriggerRef.current = event.currentTarget;
+    setExperimentOpen(true);
+  };
+
+  const openInstallReview = (item, event) => {
+    modalTriggerRef.current = event.currentTarget;
+    setInstallTarget(item);
+  };
+
+  const requestInstallReview = () => {
+    if (!installTarget) return;
+    setInstallReviewRequested((current) => new Set(current).add(installTarget.name));
+    setInstallReviewName(installTarget.name);
+    setInstallTarget(null);
+  };
 
   return (
     <div className="app-shell">
@@ -91,6 +161,7 @@ export function App() {
         <div className="brand"><GridFour weight="fill" /><strong>Capability Atlas</strong></div>
         <div className="top-context">ローカルファースト・開発運用オペレーター向け</div>
         <div className="local-status"><span />ローカルのみ <Info /></div>
+        <span className="data-status">サンプル・未実測</span>
         <div className="top-actions"><Clock /> 最終更新: 2026-07-31 13:52 <button><ArrowsClockwise />再読み込み</button></div>
       </header>
 
@@ -115,6 +186,7 @@ export function App() {
             <div>
               <h1>能力マップ（ライフサイクル別）</h1>
               <p>インストール済みでも、すべてのAIで自動的に使えるわけではありません。</p>
+              <p className="sample-notice">表示中のデータはMVP用サンプルです。現在のローカル環境を実測した値ではありません。</p>
             </div>
             <div className="map-tools">
               <button className="capability-filter">すべての能力 <CaretDown /></button>
@@ -124,11 +196,7 @@ export function App() {
           </div>
 
           <div className="lifecycle">
-            {[
-              ["発見", <Info />], ["インストール済み", <PaperPlaneTilt />], ["ワイヤ済み", <Link />],
-              ["有効化", <SlidersHorizontal />], ["読み込み済み", <CircleDashed />],
-              ["スモーク済み", <ShieldCheck />], ["採用", <Check />], ["観察中", <ChartBar />],
-            ].map(([label, icon]) => <div key={label}>{icon}<span>{label}</span></div>)}
+            {lifecycleStages.map(({ key, label, icon }) => <div className={`lifecycle-${key}`} key={key}>{icon}<span>{label}</span></div>)}
           </div>
 
           <div className="capability-grid">
@@ -154,6 +222,7 @@ export function App() {
 
           <div className="legend">
             {Object.entries(stateMeta).map(([state, meta]) => <span key={state} className={`legend-${state}`}>{meta.symbol}{meta.label}</span>)}
+            <span className="legend-unknown">{unknownEvidenceMeta.symbol}{unknownEvidenceMeta.label}</span>
           </div>
 
           <section className="recent">
@@ -169,7 +238,7 @@ export function App() {
 
         <aside className="inspector">
           <div className="inspector-head">
-            <div><h2>{runtimes[selected.runtime].name} × {selectedCapability.label}</h2><span className="status-chip">{stateMeta[runtimes[selected.runtime].states[selected.capability]].label}</span></div>
+            <div><h2>{runtimes[selected.runtime].name} × {selectedCapability.label}</h2><span className="status-chip">{statePresentation(runtimes[selected.runtime].states[selected.capability]).label}</span></div>
             <button aria-label="詳細を閉じる"><X /></button>
           </div>
           <div className="observed"><Clock />観測時刻: 2026-07-31 13:52（ローカル）<br /><ShieldCheck />スコープ: このマシンのみ</div>
@@ -197,7 +266,7 @@ export function App() {
               {["認証・APIキー", "Git push・PR作成", "設定・環境変数の変更", "公開・外部送信", "課金・有料アクション", "クラウド呼び出し"].map((item) => <span key={item}><X />{item}</span>)}
             </div>
           </section>
-          <button className="primary-action" onClick={() => setExperimentOpen(true)}><Play weight="fill" />この1タスクを安全に試す</button>
+          <button className="primary-action" onClick={openExperiment}><Play weight="fill" />この1タスクを安全に試す</button>
           <small className="action-note">実行前に詳細プレビューを表示します</small>
           {experimentResult && (
             <div className="experiment-result" role="status">
@@ -215,6 +284,7 @@ export function App() {
             <div>
               <h1>スキル・MCPカタログ</h1>
               <p>導入元、ジャンル、安全境界、検証状態を横断して確認します。</p>
+              <p className="sample-notice">表示中のデータはMVP用サンプルです。現在のローカル環境を実測した値ではありません。</p>
             </div>
             <label className="catalog-search"><MagnifyingGlass /><input placeholder="スキル・MCP・ジャンルを検索…" /></label>
           </section>
@@ -230,14 +300,21 @@ export function App() {
                 <h2>{item.name}</h2>
                 <p>{item.description}</p>
                 <div className="catalog-meta"><span>{item.genre}</span><span>{item.status}</span><span>評価 {item.score}</span></div>
-                {item.status === "未導入" ? (
-                  <button className="install-button" aria-label={`${item.name}をインストール`} onClick={() => setInstallTarget(item)}>インストール</button>
+                {installReviewRequested.has(item.name) ? (
+                  <button className="installed-button review-pending-button" aria-label={`${item.name}のレビュー待ち`} aria-disabled="true"><Clock />レビュー待ち</button>
+                ) : item.status === "未導入" ? (
+                  <button className="install-button" aria-label={`${item.name}をインストール`} onClick={(event) => openInstallReview(item, event)}>インストール</button>
                 ) : (
                   <button className="installed-button" disabled><Check />{item.status}</button>
                 )}
               </article>
             ))}
           </section>
+          {installReviewName && (
+            <div className="review-pending" role="status">
+              <Clock />{installReviewName}をこの画面内のレビュー候補に追加しました。変更は実行していません。
+            </div>
+          )}
           <aside className="ranking-note">
             <ShieldCheck />
             <div><strong>ランキングは証拠ベース</strong><p>利用実績、スモーク成功、安全性、更新状態が測定されるまで点数を付けません。</p></div>
@@ -248,7 +325,7 @@ export function App() {
       {experimentOpen && (
         <div className="modal-backdrop" onMouseDown={() => setExperimentOpen(false)}>
           <section className="experiment-modal" role="dialog" aria-modal="true" aria-label="安全実験のプレビュー" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="modal-title"><ShieldCheck /><div><h2>安全実験のプレビュー</h2><p>実行前に範囲と証拠を固定します。</p></div><button aria-label="閉じる" onClick={() => setExperimentOpen(false)}><X /></button></div>
+            <div className="modal-title"><ShieldCheck /><div><h2>安全実験のプレビュー</h2><p>実行前に範囲と証拠を固定します。</p></div><button ref={modalCloseRef} aria-label="閉じる" onClick={() => setExperimentOpen(false)}><X /></button></div>
             <div className="experiment-flow">
               <div><b>1</b><span>入力</span><strong>tests/sample.test</strong></div>
               <div><b>2</b><span>実行</span><strong>読み取り専用dry-run</strong></div>
@@ -274,14 +351,15 @@ export function App() {
       {installTarget && (
         <div className="modal-backdrop" onMouseDown={() => setInstallTarget(null)}>
           <section className="experiment-modal install-modal" role="dialog" aria-modal="true" aria-label="インストール前の確認" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="modal-title"><ShieldCheck /><div><h2>インストール前の確認</h2><p>{installTarget.name}</p></div><button aria-label="閉じる" onClick={() => setInstallTarget(null)}><X /></button></div>
+            <div className="modal-title"><ShieldCheck /><div><h2>インストール前の確認</h2><p>{installTarget.name}</p></div><button ref={modalCloseRef} aria-label="閉じる" onClick={() => setInstallTarget(null)}><X /></button></div>
             <div className="install-review">
               <p><strong>変更先</strong><span>ローカル設定・パッケージ領域（実行前に確定）</span></p>
               <p><strong>ネットワーク</strong><span>パッケージ取得時に使用する可能性あり</span></p>
               <p><strong>戻し方</strong><span>追加ファイルと設定差分を記録して復元</span></p>
               <p><strong>現在の判定</strong><span className="review-required">人間レビューが必要</span></p>
             </div>
-            <div className="modal-actions"><button onClick={() => setInstallTarget(null)}>キャンセル</button><button className="run-button">確認して進む</button></div>
+            <p className="install-safety-note">変更はまだ実行されません</p>
+            <div className="modal-actions"><button onClick={() => setInstallTarget(null)}>キャンセル</button><button className="run-button" onClick={requestInstallReview}>レビュー候補に追加（この画面内のみ）</button></div>
           </section>
         </div>
       )}

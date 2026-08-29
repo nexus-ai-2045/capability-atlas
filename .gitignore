@@ -5,5 +5,8 @@ dist/
 .env.*
 !.env.example
 coverage/
+.tools/
 artifacts/screenshots/*.png
 !artifacts/screenshots/.gitkeep
+artifacts/evidence/*.json
+artifacts/evidence/*.tmp
