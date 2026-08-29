@@ -1,0 +1,17 @@
+[
+  {
+    "id": "openai-docs",
+    "name": "OpenAI Docs",
+    "runtime": "codex",
+    "genre": "research",
+    "lifecycle": "loaded",
+    "operation": "local_read_smoke",
+    "risk": 1,
+    "uncertainty": 3,
+    "staleness": 2,
+    "novelty": 1,
+    "blastRadius": 1,
+    "failedHistory": 0,
+    "token": "must-not-leak"
+  }
+]

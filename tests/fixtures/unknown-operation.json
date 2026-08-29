@@ -1,0 +1,16 @@
+[
+  {
+    "id": "mystery",
+    "name": "Mystery Adapter",
+    "runtime": "unknown",
+    "genre": "unknown",
+    "lifecycle": "discovered",
+    "operation": "unclassified_action",
+    "risk": 5,
+    "uncertainty": 5,
+    "staleness": 5,
+    "novelty": 5,
+    "blastRadius": 5,
+    "failedHistory": 0
+  }
+]
