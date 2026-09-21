@@ -15,10 +15,10 @@
 2. 自動スモークのallowlistと操作executor。
 3. 定期実行の頻度と証跡保持期間。
 
-## 本PRの人間ゲート
+## 人間ゲート（現状）
 
-- merge（current-turn 明示承認）。CI 成功 ≠ merge 承認。
-- public / visibility（merge とは別承認）。
+- merge: 完了（PR #1 → main @ `3a244ae`）。CI 成功 ≠ merge 承認の原則は維持。
+- public / visibility（merge とは別承認・未実施）。
 
 ## 現在は承認対象外（自動実行しない）
 

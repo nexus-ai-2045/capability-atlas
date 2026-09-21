@@ -2,9 +2,9 @@
 
 # 公開準備状況
 
-- HEAD: `codex/operational-mvp` の PR tip（GitHub PR #1 head SHA を正）
-- 確認日時: 2026-08-28
-- 判定: `blocked`（human review / merge 承認待ち。public は別承認）
+- HEAD: `main` @ `3a244ae`（PR #1 merge 済み）
+- 確認日時: 2026-09-21
+- 判定: `blocked`（PR #1 merge 済み。残余: readiness_scan 人間確認 / remote CI billing / public は別承認）
 
 ## 確認済み
 
@@ -34,10 +34,10 @@ npm run smoke:ops
 
 - reviewer:
 - reviewed_at:
-- exact HEAD / PR diff: PR #1 の最新 head SHA
+- exact HEAD / PR diff: `main` @ `3a244ae`（PR #1 merge commit）
 - decision: `approve / changes_requested`
 - 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、remote CI は billing 復旧待ち
-- 次に承認する正確な操作: **merge**（current-turn 明示承認）。**public / visibility** は別承認。
+- 次に承認する正確な操作: **public / visibility**（別承認）。merge は完了済み。
 
 ## PR本文（日本語）
 
@@ -60,7 +60,7 @@ npm run smoke:ops
 
 ### 残る人間判断
 
-- merge（明示承認）
-- public / visibility（別承認）
+- merge: 完了（PR #1 → main @ `3a244ae`）
+- public / visibility（別承認・未実施）
 - Actions billing 復旧と remote CI 再実行
 - UI目視と readiness の人間確認
