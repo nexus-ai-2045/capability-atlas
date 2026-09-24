@@ -25,9 +25,10 @@ test("requirements-tools pins Release wheel with sha256 (no PyPI bare name)", ()
   assert.doesNotMatch(req, /^ai-ratchet-gate\s*$/m);
 });
 
-test("repo-preflight wrapper points upstream and fail-closes empty base", () => {
+test("repo-preflight wrapper pins upstream SHA and fail-closes empty base", () => {
   const wrapper = read("tools/run_repo_preflight.py");
   assert.match(wrapper, /nexus-ai-2045\/repo-preflight/);
+  assert.match(wrapper, /REPO_PREFLIGHT_SHA = "f825268978228a3cfb2f5ecba16a74d424134b1a"/);
   assert.match(wrapper, /readiness_scan\.py/);
   assert.match(wrapper, /consistency_gate\.py/);
   assert.match(wrapper, /without copying its inspection logic|検査ロジックはコピーしない|Do not copy/i);
@@ -42,30 +43,35 @@ test("consistency config is shadow consumer contract", () => {
   const config = JSON.parse(read(".repo-preflight-consistency.json"));
   assert.equal(config.schema, "repo-preflight.consistency/v1");
   assert.equal(config.mode, "shadow");
+  assert.match(
+    config.$schema,
+    /repo-preflight\/f825268978228a3cfb2f5ecba16a74d424134b1a\/schemas\/repository-consistency\.schema\.json/,
+  );
   assert.ok(config.readme_contracts.required_paths.includes("tools/run_repo_preflight.py"));
   assert.ok(config.readme_contracts.required_paths.includes(".ai-ratchet-gate/baseline.txt"));
 });
 
-test("upstream-style gate workflows connect without embedding engineering-brain", () => {
+test("repository-guarantees workflow is dispatch-only without embedding engineering-brain", () => {
   const productCi = read(".github/workflows/ci.yml");
-  const ratchet = read(".github/workflows/ai-ratchet-gate.yml");
-  const consistency = read(".github/workflows/repo-preflight-consistency.yml");
+  const guarantees = read(".github/workflows/repository-guarantees.yml");
 
   assert.match(productCi, /npm run verify/);
   assert.doesNotMatch(productCi, /engineering-brain|engineering_brain/);
   assert.doesNotMatch(productCi, /ai-ratchet-gate|repo-preflight/);
 
-  assert.match(ratchet, /AI_RATCHET_GATE_WHEEL_SHA256: b3f22ab772699d57906326e42189e0ab7a0ee9e33dcad55a90909ece35106cd7/);
-  assert.match(ratchet, /python -m ai_ratchet_gate --repo \./);
-  assert.doesNotMatch(ratchet, /engineering-brain|engineering_brain/);
+  assert.match(guarantees, /on:\s*\n\s*workflow_dispatch:\s*$/m);
+  assert.doesNotMatch(guarantees, /pull_request:|^\s*push:/m);
+  assert.match(guarantees, /REPO_PREFLIGHT_SHA: f825268978228a3cfb2f5ecba16a74d424134b1a/);
+  assert.match(guarantees, /空diff fail-closed|BASE==HEAD/);
+  assert.match(guarantees, /python -m ai_ratchet_gate --repo \./);
+  assert.match(guarantees, /consistency_gate\.py/);
+  assert.match(guarantees, /--require-mode shadow/);
+  assert.match(guarantees, /requirements-tools\.txt/);
+  assert.doesNotMatch(guarantees, /engineering-brain|engineering_brain/);
+  assert.doesNotMatch(guarantees, /auto-merge|visibility:\s*public/i);
 
-  assert.match(consistency, /nexus-ai-2045\/repo-preflight/);
-  assert.match(consistency, /consistency_gate\.py/);
-  assert.match(consistency, /\.repo-preflight-consistency\.json/);
-  assert.match(consistency, /empty consistency base: fail-closed/);
-  assert.match(consistency, /--require-mode shadow/);
-  assert.doesNotMatch(consistency, /engineering-brain|engineering_brain/);
-  assert.doesNotMatch(consistency, /auto-merge|visibility:\s*public/i);
+  assert.equal(existsSync(path.join(root, ".github/workflows/ai-ratchet-gate.yml")), false);
+  assert.equal(existsSync(path.join(root, ".github/workflows/repo-preflight-consistency.yml")), false);
 });
 
 test("canonical dependency pointers exist and forbid second OS/SSOT", () => {
