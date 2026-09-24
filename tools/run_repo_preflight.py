@@ -39,7 +39,16 @@ def main(argv: list[str] | None = None) -> int:
     cache = (repo / args.cache).resolve() if not args.cache.is_absolute() else args.cache.resolve()
     ensure_checkout(cache)
 
-    scan_cmd = [sys.executable, str(cache / "scripts" / "readiness_scan.py"), "--repo", str(repo)]
+    scan_cmd = [
+        sys.executable,
+        str(cache / "scripts" / "readiness_scan.py"),
+        "--repo",
+        str(repo),
+        # workflow / PREFLIGHT 同等: --consistency-base-ref は --release と併用する。
+        "--release",
+        "--consistency-base-ref",
+        base_ref,
+    ]
     if args.intent:
         scan_cmd.extend(["--intent", args.intent, "--base-ref", base_ref])
     consistency_cmd = [

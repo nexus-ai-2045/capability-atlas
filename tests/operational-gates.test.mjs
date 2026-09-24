@@ -60,14 +60,17 @@ test("repository-guarantees workflow is dispatch-only without embedding engineer
   assert.doesNotMatch(productCi, /ai-ratchet-gate|repo-preflight/);
 
   assert.match(guarantees, /on:\s*\n\s*workflow_dispatch:\s*$/m);
-  assert.doesNotMatch(guarantees, /pull_request:|^\s*push:/m);
+  assert.doesNotMatch(guarantees, /^\s*pull_request:\s*$/m);
+  assert.doesNotMatch(guarantees, /^\s*push:\s*$/m);
   assert.match(guarantees, /REPO_PREFLIGHT_SHA: f825268978228a3cfb2f5ecba16a74d424134b1a/);
   assert.match(guarantees, /空diff fail-closed|BASE==HEAD/);
   assert.match(guarantees, /python -m ai_ratchet_gate --repo \./);
   assert.match(guarantees, /consistency_gate\.py/);
   assert.match(guarantees, /--require-mode shadow/);
   assert.match(guarantees, /requirements-tools\.txt/);
-  assert.doesNotMatch(guarantees, /engineering-brain|engineering_brain/);
+  // コメントで「埋め込まない」と宣言するのは可。実行ステップに埋め込まないこと。
+  assert.match(guarantees, /engineering-brain は埋め込まない/);
+  assert.doesNotMatch(guarantees, /uses:.*engineering-brain|pip install.*engineering[_-]brain/i);
   assert.doesNotMatch(guarantees, /auto-merge|visibility:\s*public/i);
 
   assert.equal(existsSync(path.join(root, ".github/workflows/ai-ratchet-gate.yml")), false);
