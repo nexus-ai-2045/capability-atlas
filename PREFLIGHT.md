@@ -3,9 +3,13 @@
 # 公開準備状況
 
 - repository: `nexus-ai-2045/capability-atlas`
-- HEAD: `main`（PR #1 merge 済み）+ 本 PR の開発保証スイート載せ替え
-- 確認日時: 2026-09-24
-- 判定: `blocked`（human review / merge 承認待ち。public は別承認）
+- 確認済み基準（製品 MVP）: PR `#1` のマージコミット `3a244ae`（`main` 上。本 PR `#4` の tip でも、docs のみの PR `#3` の tip でもない）
+- 本 PR（契約載せ）: `#4` / 枝 `cursor/repository-guarantees-suite-f2e0`（未マージ）
+- 確認日時: 2026-09-25
+- 判定: `blocked`
+  - PR `#1` は merge 済み
+  - 本 PR `#4`（開発保証スイート載せ替え）の merge は **人判断待ち**
+  - 残余: `readiness_scan` の人による確認 / 遠隔 CI の課金・実行証跡 / **public は別承認・未実施**
 
 ## 開発保証ゲート
 
@@ -70,18 +74,26 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 - [x] repo-preflight consistency `mode=shadow`（`.repo-preflight-consistency.json`）
 - [x] 開発保証を `repository-guarantees.yml`（workflow_dispatch のみ・空diff fail-closed・pin SHA）へ一本化
 - [x] 外部契約ポインタの正本は [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
-- [ ] secret / personal path / history（repo-preflight readiness_scan の所見を人間が確認）
-- [ ] remote CI runtime evidence（現在は org billing/spending limit で job 未起動の可能性）
+- [x] PR `#1` → `main` @ `3a244ae` の merge 完了（製品 MVP）
+- [ ] secret / personal path / history（`readiness_scan` の所見を人が確認）
+- [ ] remote CI runtime evidence（組織の課金 / 利用上限によりジョブ未起動の可能性）
 - [ ] operations / monitoring / rollback（実collector・scheduler は未実装のまま・本PR範囲外）
+- [ ] 本 PR `#4` の merge（人の明示承認・未実施）
+- [ ] public / visibility（別承認・未実施）
 
 ## 人間目視
 
 - reviewer:
 - reviewed_at:
-- exact HEAD / PR diff: 本 PR の最新 head SHA
+- exact HEAD / PR diff: 本 PR `#4` の最新 head SHA（GitHub の PR 画面で確認）
 - decision: `approve / changes_requested`
-- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、remote Actions は課金状況に依存
-- 次に承認する正確な操作: **merge**（current-turn 明示承認）。**public / visibility** は別承認。
+- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、本 `#4` merge 未承認、public未承認、遠隔 CI は課金状況に依存
+- 次に承認する正確な操作: **本 PR `#4` の merge**（current-turn 明示承認）。PR `#1` の merge は完了済み。**public / visibility** は別承認・未実施（「次は公開」だけに飛ばない）。
+
+## 文書統合メモ
+
+- docs のみの open PR `#3`（`cursor/docs-post-merge-preflight-3e94`）の事実更新（`#1` merge 済み / 残余 blocker / public は別承認）を本 `#4` へ吸収した。
+- `#3` は superseded 候補。close / merge は人が行う。本枝への積み上げや新PRは作らない。
 
 ## PR本文（日本語）
 
@@ -89,6 +101,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 
 - 既存の repo-preflight / ai-ratchet-gate 開発保証を、ai-round-table #29 と同型の吸収パターンへ載せ替え
 - `repository-guarantees.yml`（workflow_dispatch のみ・空diff fail-closed・上流 pin SHA）
+- PR `#3` の PREFLIGHT / HUMAN_REVIEW 事実を吸収し一本化
 - 検査ロジック非コピー。製品 CI（`ci.yml`）は触らない
 
 ### 検証
@@ -103,6 +116,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 
 ### 残る人間判断
 
-- merge（明示承認）
-- public / visibility（別承認）
+- 本 PR `#4` の merge（明示承認・未実施）
+- PR `#3` の close（superseded・人）
+- public / visibility（別承認・未実施）
 - Actions 実走の人間確認
