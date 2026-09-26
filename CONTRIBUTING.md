@@ -26,8 +26,9 @@ python tools/run_repo_preflight.py --repo .
 ```
 
 - `ai-ratchet-gate` は PyPI 名では入れない（Release wheel URL + hash のみ）。
-- `tools/run_repo_preflight.py` は upstream `nexus-ai-2045/repo-preflight` を `.tools/repo-preflight` へ clone して実行する。
+- `tools/run_repo_preflight.py` は upstream `nexus-ai-2045/repo-preflight` を pin SHA で `.tools/repo-preflight` へ fetch して実行する（tip 追従しない）。
 - consistency は当面 `shadow`。所見は観測材料であり、merge 承認ではない。
+- 開発保証の Actions 配線は `.github/workflows/repository-guarantees.yml`（`workflow_dispatch` のみ・空diff fail-closed）。製品 CI（`ci.yml`）へ埋め込まない。手元同等手順は `PREFLIGHT.md`。
 
 ## PR 本文
 

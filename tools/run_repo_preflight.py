@@ -2,7 +2,8 @@
 """Run upstream repo-preflight without copying its inspection logic.
 
 Clones/updates nexus-ai-2045/repo-preflight into .tools/repo-preflight (gitignored)
-and executes readiness_scan.py + consistency_gate.py against this repository.
+at a pinned SHA and executes readiness_scan.py + consistency_gate.py against this
+repository. Do not float to tip.
 """
 
 from __future__ import annotations
@@ -15,6 +16,8 @@ from pathlib import Path
 
 
 UPSTREAM = "https://github.com/nexus-ai-2045/repo-preflight.git"
+# art#29 / rpg#14 と同じ pin。検査ロジックはコピーせず、この SHA を fetch する。
+REPO_PREFLIGHT_SHA = "f825268978228a3cfb2f5ecba16a74d424134b1a"
 DEFAULT_CACHE = Path(".tools") / "repo-preflight"
 ZERO_SHA = "0" * 40
 
@@ -36,7 +39,16 @@ def main(argv: list[str] | None = None) -> int:
     cache = (repo / args.cache).resolve() if not args.cache.is_absolute() else args.cache.resolve()
     ensure_checkout(cache)
 
-    scan_cmd = [sys.executable, str(cache / "scripts" / "readiness_scan.py"), "--repo", str(repo)]
+    scan_cmd = [
+        sys.executable,
+        str(cache / "scripts" / "readiness_scan.py"),
+        "--repo",
+        str(repo),
+        # workflow / PREFLIGHT 同等: --consistency-base-ref は --release と併用する。
+        "--release",
+        "--consistency-base-ref",
+        base_ref,
+    ]
     if args.intent:
         scan_cmd.extend(["--intent", args.intent, "--base-ref", base_ref])
     consistency_cmd = [
@@ -90,23 +102,41 @@ def main(argv: list[str] | None = None) -> int:
 
 def ensure_checkout(cache: Path) -> None:
     cache.parent.mkdir(parents=True, exist_ok=True)
-    if (cache / "scripts" / "readiness_scan.py").is_file():
+    if (cache / ".git").is_dir():
         subprocess.run(
-            ["git", "-C", str(cache), "fetch", "--depth", "1", "origin"],
-            check=False,
+            ["git", "-C", str(cache), "fetch", "--depth", "1", "origin", REPO_PREFLIGHT_SHA],
+            check=True,
             capture_output=True,
         )
         subprocess.run(
-            ["git", "-C", str(cache), "checkout", "FETCH_HEAD"],
-            check=False,
+            ["git", "-C", str(cache), "checkout", "--detach", REPO_PREFLIGHT_SHA],
+            check=True,
             capture_output=True,
         )
-        return
-    subprocess.run(
-        ["git", "clone", "--depth", "1", UPSTREAM, str(cache)],
-        check=True,
-        capture_output=True,
-    )
+    else:
+        if cache.exists():
+            # Stale non-git cache from older wrapper: replace with pinned clone.
+            import shutil
+
+            shutil.rmtree(cache)
+        subprocess.run(
+            ["git", "clone", "--no-checkout", UPSTREAM, str(cache)],
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(cache), "checkout", "--detach", REPO_PREFLIGHT_SHA],
+            check=True,
+            capture_output=True,
+        )
+    head = subprocess.check_output(
+        ["git", "-C", str(cache), "rev-parse", "HEAD"],
+        text=True,
+    ).strip()
+    if head != REPO_PREFLIGHT_SHA:
+        raise SystemExit(
+            f"repo-preflight pin mismatch: expected {REPO_PREFLIGHT_SHA}, got {head}"
+        )
 
 
 if __name__ == "__main__":

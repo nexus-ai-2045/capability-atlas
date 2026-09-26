@@ -50,6 +50,6 @@ python tools/run_repo_preflight.py --repo .
 
 ## 現在の境界
 
-- 実装済み: 状態モデル、Safety router、統合UI、fixture collector、有界planner、JSON計画証跡、`run-once`、製品CI workflow 定義（`npm run verify` / `smoke:ops`）、preflight/ratchet 配線（専用 workflow）。remote Actions の成否はこの文書では主張しない。
+- 実装済み: 状態モデル、Safety router、統合UI、fixture collector、有界planner、JSON計画証跡、`run-once`、製品CI workflow 定義（`npm run verify` / `smoke:ops`）、preflight/ratchet 配線（`repository-guarantees.yml`・workflow_dispatch のみ）。remote Actions の成否はこの文書では主張しない。
 - 未実装: 実環境コレクター、操作executor、スケジューラー、実インストール。
 - 実行しない（自動）: 認証情報取得、設定変更、外部送信、GitHub操作、課金、merge、public。

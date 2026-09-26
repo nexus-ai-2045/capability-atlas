@@ -8,6 +8,7 @@
 - 人間レビュー境界が不足していないか。
 - 運用ゲート配線（preflight / ratchet）が依存消費であり、検査エンジンの複製でないか。
 - README / PREFLIGHT / DEPENDENCIES が実装実態と一致しているか（vapor claimがないか）。
+- 開発保証スイート（`repository-guarantees.yml` 一本化）が上流消費のままか。
 
 ## 次フェーズで承認が必要なもの
 
@@ -15,10 +16,11 @@
 2. 自動スモークのallowlistと操作executor。
 3. 定期実行の頻度と証跡保持期間。
 
-## 本PRの人間ゲート
+## 人間ゲート（現状）
 
-- merge（current-turn 明示承認）。CI 成功 ≠ merge 承認。
-- public / visibility（merge とは別承認）。
+- 製品 MVP（PR #1 → `main` @ `3a244ae`）: **merge 完了**。CI 成功 ≠ merge 承認の原則は維持。
+- 本 PR #4（repo-preflight / ai-ratchet-gate 契約載せ）: **merge はまだ人判断**（current-turn 明示承認が必要）。手元 gate の `pass` は merge 承認ではない。
+- public / visibility: merge とは **別承認・未実施**。
 
 ## 現在は承認対象外（自動実行しない）
 
