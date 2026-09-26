@@ -2,9 +2,68 @@
 
 # 公開準備状況
 
-- HEAD: `codex/operational-mvp` の PR tip（GitHub PR #1 head SHA を正）
-- 確認日時: 2026-08-28
-- 判定: `blocked`（human review / merge 承認待ち。public は別承認）
+- repository: `nexus-ai-2045/capability-atlas`
+- 確認済み基準（製品 MVP）: PR `#1` のマージコミット `3a244ae`（`main` 上。本 PR `#4` の tip でも、docs のみの PR `#3` の tip でもない）
+- 本 PR（契約載せ）: `#4` / 枝 `cursor/repository-guarantees-suite-f2e0`（未マージ）
+- 確認日時: 2026-09-25
+- 判定: `blocked`
+  - PR `#1` は merge 済み
+  - 本 PR `#4`（開発保証スイート載せ替え）の merge は **人判断待ち**
+  - 残余: `readiness_scan` の人による確認 / 遠隔 CI の課金・実行証跡 / **public は別承認・未実施**
+
+## 開発保証ゲート
+
+検査ロジックは本リポジトリへコピーしない。上流を直接呼ぶ。`engineering-brain` は埋め込まない。
+
+| 契約 | 上流 | 設定 | 扱い |
+|---|---|---|---|
+| 文書・実装の宣言整合 | `nexus-ai-2045/repo-preflight`（pin SHA `f825268978228a3cfb2f5ecba16a74d424134b1a`） | `.repo-preflight-consistency.json`（`shadow`） | `consistency_gate` + `readiness_scan`。shadow 所見は止めない。`tool_error` は fail-closed |
+| tracked ∧ ignored の新規悪化 | `nexus-ai-2045/ai-ratchet-gate` v0.1.1（wheel + SHA-256） | `.ai-ratchet-gate/baseline.txt` | 既存分は grandfather。baseline に無い新規だけ deny |
+
+入口・保証しないことの正本: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
+
+### トリガ方針（Actions 課金）
+
+- 開発保証 workflow（`repository-guarantees.yml`）は **`workflow_dispatch` のみ**。`pull_request` / `push` では起動しない
+- `workflow_dispatch` で BASE と HEAD が同一（空 diff）のときは差分検査を緑にしない（fail-closed）
+- 製品 CI（`.github/workflows/ci.yml`）は別契約。開発保証パッケージは埋め込まない
+
+### 手元同等の確認手順
+
+feature 枝で `origin/main` との差分がある状態で実行する（`BASE==HEAD` は意図的に失敗させる）。
+
+```bash
+# 1) ai-ratchet-gate（tracked∧ignored の新規悪化だけ deny）
+python -m pip install --require-hashes -r requirements-tools.txt
+python -m ai_ratchet_gate --repo .
+
+# 2) repo-preflight（上流 pin。検査ロジックはコピーしない）
+#    ローカル入口: tools/run_repo_preflight.py（同じ SHA を fetch）
+python tools/run_repo_preflight.py --repo .
+
+# または workflow と同等の明示手順:
+REPO_PREFLIGHT_SHA=f825268978228a3cfb2f5ecba16a74d424134b1a
+git clone --no-checkout https://github.com/nexus-ai-2045/repo-preflight.git /tmp/repo-preflight
+git -C /tmp/repo-preflight checkout --detach "$REPO_PREFLIGHT_SHA"
+test "$(git -C /tmp/repo-preflight rev-parse HEAD)" = "$REPO_PREFLIGHT_SHA"
+
+git fetch origin main
+BASE="$(git rev-parse origin/main)"
+HEAD="$(git rev-parse HEAD)"
+test "$BASE" != "$HEAD"  # 空diff fail-closed
+
+python /tmp/repo-preflight/scripts/consistency_gate.py \
+  --repo . --base-ref "$BASE" --require-config --require-mode shadow --json
+
+python /tmp/repo-preflight/scripts/readiness_scan.py \
+  --repo . --release --consistency-base-ref origin/main
+
+# 3) 製品側
+npm run verify
+npm run smoke:ops
+```
+
+Actions で同等確認する場合は、feature 枝を選んで `repository-guarantees` を `workflow_dispatch` する（default branch 直上だと空 diff で fail-closed）。
 
 ## 確認済み
 
@@ -13,54 +72,51 @@
 - [x] `npm run verify` / `npm run smoke:ops`（ローカル）
 - [x] ai-ratchet-gate baseline（`.ai-ratchet-gate/baseline.txt`、導入時 0 件）
 - [x] repo-preflight consistency `mode=shadow`（`.repo-preflight-consistency.json`）
+- [x] 開発保証を `repository-guarantees.yml`（workflow_dispatch のみ・空diff fail-closed・pin SHA）へ一本化
 - [x] 外部契約ポインタの正本は [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
-- [ ] secret / personal path / history（repo-preflight readiness_scan の所見を人間が確認）
-- [ ] remote CI runtime evidence（現在は org billing/spending limit で job 未起動）
+- [x] PR `#1` → `main` @ `3a244ae` の merge 完了（製品 MVP）
+- [ ] secret / personal path / history（`readiness_scan` の所見を人が確認）
+- [ ] remote CI runtime evidence（組織の課金 / 利用上限によりジョブ未起動の可能性）
 - [ ] operations / monitoring / rollback（実collector・scheduler は未実装のまま・本PR範囲外）
-
-## 機械ゲート
-
-入口・CI 配線・保証しないことの正本: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
-
-```bash
-python -m pip install --require-hashes -r requirements-tools.txt
-python -m ai_ratchet_gate --repo .
-python tools/run_repo_preflight.py --repo .
-npm run verify
-npm run smoke:ops
-```
+- [ ] 本 PR `#4` の merge（人の明示承認・未実施）
+- [ ] public / visibility（別承認・未実施）
 
 ## 人間目視
 
 - reviewer:
 - reviewed_at:
-- exact HEAD / PR diff: PR #1 の最新 head SHA
+- exact HEAD / PR diff: 本 PR `#4` の最新 head SHA（GitHub の PR 画面で確認）
 - decision: `approve / changes_requested`
-- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、remote CI は billing 復旧待ち
-- 次に承認する正確な操作: **merge**（current-turn 明示承認）。**public / visibility** は別承認。
+- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、本 `#4` merge 未承認、public未承認、遠隔 CI は課金状況に依存
+- 次に承認する正確な操作: **本 PR `#4` の merge**（current-turn 明示承認）。PR `#1` の merge は完了済み。**public / visibility** は別承認・未実施（「次は公開」だけに飛ばない）。
+
+## 文書統合メモ
+
+- docs のみの open PR `#3`（`cursor/docs-post-merge-preflight-3e94`）の事実更新（`#1` merge 済み / 残余 blocker / public は別承認）を本 `#4` へ吸収した。
+- `#3` は superseded 候補。close / merge は人が行う。本枝への積み上げや新PRは作らない。
 
 ## PR本文（日本語）
 
 ### 概要
 
-- 有界な再計画ループ（fixture観測 → 差分/drift → 最大3候補計画 → JSON証跡）
-- 運用保証を依存として配線: upstream `repo-preflight` / Release固定 `ai-ratchet-gate`（ロジック非コピー）
-- FDE は外部判断OSポインタのみ。第二フレームワーク / 第二SSOTなし
-- 文書を実装実態へ整合。main #2 の shadow consistency を取り込み拡張
+- 既存の repo-preflight / ai-ratchet-gate 開発保証を、ai-round-table #29 と同型の吸収パターンへ載せ替え
+- `repository-guarantees.yml`（workflow_dispatch のみ・空diff fail-closed・上流 pin SHA）
+- PR `#3` の PREFLIGHT / HUMAN_REVIEW 事実を吸収し一本化
+- 検査ロジック非コピー。製品 CI（`ci.yml`）は触らない
 
 ### 検証
 
-- ローカル: `npm run verify` / `smoke:ops`（`planned=true` / `executed=false`）/ ratchet 0/0 / preflight consistency `pass`（shadow）
-- remote Actions: billing/spending limit により未起動（コード失敗ではない）。復旧後に再実行
+- ローカル: ratchet / consistency（shadow）/ `npm run verify`（本 PR で実測）
+- remote Actions: 課金状況に依存。復旧後は feature 枝で `workflow_dispatch`
 
 ### 境界
 
-- 実collector・executor・scheduler・実インストールは無効
-- 検査エンジン非コピー、秘密情報非掲載、GitHub/公開の自動操作なし
+- Settings / billing / required checks / merge / visibility / LICENSE は変更しない
+- 新フレームワーク・新 gate 種別・新 workflow 種別は追加しない
 
 ### 残る人間判断
 
-- merge（明示承認）
-- public / visibility（別承認）
-- Actions billing 復旧と remote CI 再実行
-- UI目視と readiness の人間確認
+- 本 PR `#4` の merge（明示承認・未実施）
+- PR `#3` の close（superseded・人）
+- public / visibility（別承認・未実施）
+- Actions 実走の人間確認
