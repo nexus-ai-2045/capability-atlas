@@ -10,7 +10,8 @@
   - PR `#1` / `#4` は merge 済み
   - PR `#3` は close 済み（superseded）
   - 開いている PR: 0
-  - 残余: `readiness_scan` の人による確認 / 遠隔 CI の課金・実行証跡 / **public は別承認・未実施**（リポジトリは現時点で private）
+  - 残余: `readiness_scan` の人による確認 / 遠隔 CI の課金・実行証跡
+  - public / visibility: **実施済み**（リポジトリは現時点で public）
 
 ## 開発保証ゲート
 
@@ -81,7 +82,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 - [ ] secret / personal path / history（`readiness_scan` の所見を人が確認）
 - [ ] remote CI runtime evidence（組織の課金 / 利用上限によりジョブ未起動の可能性）
 - [ ] operations / monitoring / rollback（実collector・scheduler は未実装のまま・本PR範囲外）
-- [ ] public / visibility（別承認・未実施。現時点で private）
+- [x] public / visibility（実施済み。現時点で public）
 
 ## 人間目視
 
@@ -89,8 +90,8 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 - reviewed_at:
 - exact HEAD / PR diff: 対象 PR の最新 head SHA（GitHub の PR 画面で確認）
 - decision: `approve / changes_requested`
-- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、public未承認、遠隔 CI は課金状況に依存
-- 次に承認する正確な操作: **public / visibility**（別承認・未実施。「#4 merge待ち」ではない。PR `#1` / `#4` の merge は完了済み）。
+- 残余リスク: 実collector未実装、executor未実装、scheduler未接続、遠隔 CI は課金状況に依存
+- 次に承認する正確な操作: **なし（public / visibility は実施済み）**。「#4 merge待ち」ではない。PR `#1` / `#4` の merge は完了済み。残余は `readiness_scan` 所見・Actions 実走・operations 系の人間確認。
 
 ## 文書統合メモ
 
@@ -99,7 +100,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 
 ## 残る人間判断
 
-- public / visibility（別承認・未実施。現時点で private）
+- public / visibility: **実施済み**（現時点で public）※残判断ではない
 - `readiness_scan` 所見の人間確認
 - Actions 実走の人間確認
 - operations / monitoring / rollback（実装後の別承認）

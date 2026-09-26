@@ -21,7 +21,7 @@
 - 製品 MVP（PR #1 → `main` @ `3a244ae`）: **merge 完了**。CI 成功 ≠ merge 承認の原則は維持。
 - 開発保証スイート（PR #4 → `main` @ `17ae591`）: **merge 完了**（2026-09-26）。手元 gate の `pass` は merge 承認ではない、という原則は維持。
 - PR #3: **close 済み**（superseded。開いている PR は 0）。
-- public / visibility: merge とは **別承認・未実施**（リポジトリは現時点で private）。
+- public / visibility: **実施済み**（リポジトリは現時点で public）。
 
 ## 現在は承認対象外（自動実行しない）
 
