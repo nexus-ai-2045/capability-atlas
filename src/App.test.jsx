@@ -6,7 +6,7 @@ import { App } from "./App.jsx";
 afterEach(cleanup);
 
 describe("Capability Atlas", () => {
-  it("shows the map, evidence inspector, and safe experiment flow", async () => {
+  it("shows the map, evidence inspector, and an unexecuted experiment plan", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -26,29 +26,34 @@ describe("Capability Atlas", () => {
     }
     expect(screen.getByText("未確認（証拠なし）")).toBeVisible();
     expect(screen.getByText("何が変わった")).toBeVisible();
+    expect(screen.getByText(/以下はサンプル観測です。現マシンでは未測定です。/)).toBeVisible();
+    expect(screen.getByText("想定操作")).toBeVisible();
+    expect(screen.getByText("未取得")).toBeVisible();
     expect(screen.getByText("人の判断が必要な境界")).toBeVisible();
 
-    await user.click(screen.getByRole("button", { name: "この1タスクを安全に試す" }));
+    await user.click(screen.getByRole("button", { name: "この1タスクの計画を見る" }));
 
     const dialog = screen.getByRole("dialog", { name: "安全実験のプレビュー" });
     expect(dialog).toBeVisible();
     expect(screen.getByRole("button", { name: "閉じる" })).toHaveFocus();
     expect(within(dialog).getByText("外部送信なし")).toBeVisible();
-    expect(screen.getByRole("button", { name: "ローカル実験を開始" })).toBeEnabled();
+    expect(within(dialog).getByText("この画面は計画のサンプルです。操作は実行しません。")).toBeVisible();
+    expect(screen.getByRole("button", { name: "計画を確認する" })).toBeEnabled();
 
-    await user.click(screen.getByRole("button", { name: "ローカル実験を開始" }));
+    await user.click(screen.getByRole("button", { name: "計画を確認する" }));
 
     expect(screen.queryByRole("dialog", { name: "安全実験のプレビュー" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "この1タスクを安全に試す" })).toHaveFocus();
-    expect(screen.getByRole("status")).toHaveTextContent("ローカル実験を完了");
-    expect(screen.getByRole("status")).toHaveTextContent("外部送信なし");
+    expect(screen.getByRole("button", { name: "この1タスクの計画を見る" })).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent("サンプル計画を確認しました");
+    expect(screen.getByRole("status")).toHaveTextContent("終了コードは未取得");
+    expect(screen.getByRole("status")).not.toHaveTextContent("実験を完了");
   });
 
   it("closes the safe experiment preview with Escape", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const trigger = screen.getByRole("button", { name: "この1タスクを安全に試す" });
+    const trigger = screen.getByRole("button", { name: "この1タスクの計画を見る" });
     await user.click(trigger);
     await user.keyboard("{Escape}");
 
@@ -60,7 +65,7 @@ describe("Capability Atlas", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const trigger = screen.getByRole("button", { name: "この1タスクを安全に試す" });
+    const trigger = screen.getByRole("button", { name: "この1タスクの計画を見る" });
     await user.click(trigger);
     await user.click(screen.getByRole("button", { name: "閉じる" }));
 
