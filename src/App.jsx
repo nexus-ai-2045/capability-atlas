@@ -99,7 +99,7 @@ export function App() {
   const [page, setPage] = useState("map");
   const [selected, setSelected] = useState({ runtime: 0, capability: 3 });
   const [experimentOpen, setExperimentOpen] = useState(false);
-  const [experimentResult, setExperimentResult] = useState(null);
+  const [planReviewed, setPlanReviewed] = useState(false);
   const [installTarget, setInstallTarget] = useState(null);
   const [installReviewRequested, setInstallReviewRequested] = useState(() => new Set());
   const [installReviewName, setInstallReviewName] = useState("");
@@ -241,7 +241,7 @@ export function App() {
             <div><h2>{runtimes[selected.runtime].name} × {selectedCapability.label}</h2><span className="status-chip">{statePresentation(runtimes[selected.runtime].states[selected.capability]).label}</span></div>
             <button aria-label="詳細を閉じる"><X /></button>
           </div>
-          <div className="observed"><Clock />観測時刻: 2026-07-31 13:52（ローカル）<br /><ShieldCheck />スコープ: このマシンのみ</div>
+          <div className="observed">以下はサンプル観測です。現マシンでは未測定です。<br /><Clock />観測時刻の例: 2026-07-31 13:52<br /><ShieldCheck />想定スコープ: ローカルのみ</div>
 
           <section className="inspector-section fact-section">
             <h3>何が変わった <CaretDown /></h3>
@@ -255,10 +255,10 @@ export function App() {
             <p><EvidenceTag type="unknown">不明</EvidenceTag> 環境変数・権限の不足リスク</p>
           </section>
           <section className="inspector-section task-section">
-            <h3>安全に試せる1タスク <CaretDown /></h3>
+            <h3>安全実験のサンプル計画 <CaretDown /></h3>
             <p><EvidenceTag type="inference">目的</EvidenceTag> ローカルで実行できる最小の証拠を収集</p>
-            <p><EvidenceTag type="fact">実施</EvidenceTag> 対象1ファイルのみをdry-run</p>
-            <p><EvidenceTag type="fact">証拠</EvidenceTag> 標準出力・終了コード・対象範囲</p>
+            <p><EvidenceTag type="inference">想定操作</EvidenceTag> 対象1ファイルのみをdry-run</p>
+            <p><EvidenceTag type="unknown">未取得</EvidenceTag> 標準出力・終了コード・対象範囲</p>
           </section>
           <section className="inspector-section boundary-section">
             <h3>人の判断が必要な境界</h3>
@@ -266,14 +266,14 @@ export function App() {
               {["認証・APIキー", "Git push・PR作成", "設定・環境変数の変更", "公開・外部送信", "課金・有料アクション", "クラウド呼び出し"].map((item) => <span key={item}><X />{item}</span>)}
             </div>
           </section>
-          <button className="primary-action" onClick={openExperiment}><Play weight="fill" />この1タスクを安全に試す</button>
-          <small className="action-note">実行前に詳細プレビューを表示します</small>
-          {experimentResult && (
+          <button className="primary-action" onClick={openExperiment}><Play weight="fill" />この1タスクの計画を見る</button>
+          <small className="action-note">サンプル計画を表示します。操作は実行しません</small>
+          {planReviewed && (
             <div className="experiment-result" role="status">
               <Check weight="bold" />
               <div>
-                <strong>ローカル実験を完了</strong>
-                <small>終了コード 0・外部送信なし・設定変更なし</small>
+                <strong>サンプル計画を確認しました</strong>
+                <small>操作は未実行・出力と終了コードは未取得</small>
               </div>
             </div>
           )}
@@ -325,23 +325,23 @@ export function App() {
       {experimentOpen && (
         <div className="modal-backdrop" onMouseDown={() => setExperimentOpen(false)}>
           <section className="experiment-modal" role="dialog" aria-modal="true" aria-label="安全実験のプレビュー" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="modal-title"><ShieldCheck /><div><h2>安全実験のプレビュー</h2><p>実行前に範囲と証拠を固定します。</p></div><button ref={modalCloseRef} aria-label="閉じる" onClick={() => setExperimentOpen(false)}><X /></button></div>
+            <div className="modal-title"><ShieldCheck /><div><h2>安全実験のプレビュー</h2><p>この画面は計画のサンプルです。操作は実行しません。</p></div><button ref={modalCloseRef} aria-label="閉じる" onClick={() => setExperimentOpen(false)}><X /></button></div>
             <div className="experiment-flow">
               <div><b>1</b><span>入力</span><strong>tests/sample.test</strong></div>
-              <div><b>2</b><span>実行</span><strong>読み取り専用dry-run</strong></div>
-              <div><b>3</b><span>証拠</span><strong>出力・終了コード</strong></div>
+              <div><b>2</b><span>想定操作</span><strong>読み取り専用dry-run</strong></div>
+              <div><b>3</b><span>想定証拠</span><strong>出力・終了コード（未取得）</strong></div>
             </div>
-            <div className="safety-summary"><p><Check />ローカルファイルのみ</p><p><Check />一時出力のみ</p><p><X />外部送信なし</p><p><X />設定変更なし</p></div>
+            <div className="safety-summary"><p><Check />ローカルファイルのみを想定</p><p><Check />一時出力を予定</p><p><X />外部送信なし</p><p><X />設定変更なし</p></div>
             <div className="modal-actions">
               <button onClick={() => setExperimentOpen(false)}>キャンセル</button>
               <button
                 className="run-button"
                 onClick={() => {
                   setExperimentOpen(false);
-                  setExperimentResult({ exitCode: 0 });
+                  setPlanReviewed(true);
                 }}
               >
-                ローカル実験を開始
+                計画を確認する
               </button>
             </div>
           </section>
