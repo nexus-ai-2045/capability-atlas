@@ -104,3 +104,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 - `readiness_scan` 所見の人間確認
 - Actions 実走の人間確認
 - operations / monitoring / rollback（実装後の別承認）
+
+## 公開名義の検査（2026-10-17）
+
+CI の `.github/workflows/preflight.yml` は、共通ゲート `nexus-ai-2045/repo-preflight` の `preflight-gate.yml` を SHA 固定で呼びます。このゲートは全 commit の作成者と記録者を公開名義の許可リスト（repo-preflight の `references/public-commit-identities.json`）と照合し、リストに無い名義があれば失敗します。名義の値は出力しません。
