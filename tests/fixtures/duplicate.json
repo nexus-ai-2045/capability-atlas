@@ -1,0 +1,4 @@
+[
+  {"id":"same","runtime":"codex","genre":"test","lifecycle":"loaded","operation":"local_read_smoke"},
+  {"id":"same","runtime":"claude","genre":"test","lifecycle":"loaded","operation":"local_read_smoke"}
+]

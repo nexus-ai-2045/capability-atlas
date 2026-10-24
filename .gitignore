@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+coverage/
+.tools/
+artifacts/screenshots/*.png
+!artifacts/screenshots/.gitkeep
+artifacts/evidence/*.json
+artifacts/evidence/*.tmp

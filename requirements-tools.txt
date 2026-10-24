@@ -1,0 +1,4 @@
+# 運用ゲート依存（検査エンジンはコピーしない。wheel・archiveをこのrepoへ同梱しない）。
+# ai-ratchet-gate: 公開取得元（Release / PyPI）が無いため、現在は固定できる配布物が無い。
+# 状態：ai-ratchet-gate 0.2.0 のリリース待ち。公開後に Release wheel URL + --hash=sha256 をここへ固定する。
+# それまで repository-guarantees.yml の ratchet 手順は fail-closed（未導入として止まる）。
