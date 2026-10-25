@@ -8,7 +8,7 @@
 - 人間レビュー境界が不足していないか。
 - 運用ゲート配線（preflight / ratchet）が依存消費であり、検査エンジンの複製でないか。
 - README / PREFLIGHT / DEPENDENCIES が実装実態と一致しているか（vapor claimがないか）。
-- 開発保証スイート（`repository-guarantees.yml` 一本化）が上流消費のままか。
+- 開発保証（必須チェック `all-green` の preflight-gate 呼び出し）が上流消費のままか。
 
 ## 次フェーズで承認が必要なもの
 
