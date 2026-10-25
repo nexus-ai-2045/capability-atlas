@@ -6,7 +6,7 @@
 
 ## capabilities
 
-- 状態モデル、Safety router、統合UI、fixture collector、有界planner、JSON計画証跡、`run-once`、製品CI workflow 定義（`npm run verify` / `smoke:ops`）、preflight/ratchet 配線（`repository-guarantees.yml`・workflow_dispatch のみ）。remote Actions の成否はこの文書では主張しない。
+- 状態モデル、Safety router、統合UI、fixture collector、有界planner、JSON計画証跡、`run-once`、製品CI workflow 定義（`npm run verify` / `smoke:ops`）、preflight 配線（必須チェック `all-green` → preflight-gate）。remote Actions の成否はこの文書では主張しない。
 - 画面の流れ: 能力地図 → セル差分 → 安全実験計画 → 人間レビュー境界
   1. 能力地図で、AIごとの利用可能面積を見る。
   2. セルを選び、更新差分と未採用理由を証拠付きで確認する。

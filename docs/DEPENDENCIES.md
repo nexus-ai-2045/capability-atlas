@@ -4,8 +4,8 @@
 
 | 契約 | 正本 | この repo での扱い |
 |---|---|---|
-| repo-preflight | [nexus-ai-2045/repo-preflight](https://github.com/nexus-ai-2045/repo-preflight) pin `5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3`（`v0.10.0`） | `tools/run_repo_preflight.py`（`repository-guarantees.yml`から呼ぶ）が公開上流からこのcommitだけを実行時に取り寄せ、取得commit idとtagの指す先を照合し、全memberを検査して安全展開して実行。repoへ同梱しない。新credential不要。スキャナ本体は手編集しない |
-| ai-ratchet-gate | [nexus-ai-2045/ai-ratchet-gate](https://github.com/nexus-ai-2045/ai-ratchet-gate) 0.2.0 のリリース待ち | 公開取得元（Release / PyPI）が無いため現在は固定できる配布物が無い。repoへ同梱しない。公開後に`requirements-tools.txt`へRelease wheel URL+SHA-256で固定する。それまで専用workflowのratchet手順はfail-closed。既存は baseline、新規 tracked∧ignored のみ fail-closed |
+| repo-preflight | [nexus-ai-2045/repo-preflight](https://github.com/nexus-ai-2045/repo-preflight) pin `5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3`（`v0.10.0`） | `tools/run_repo_preflight.py`（手元から呼ぶ）が公開上流からこのcommitだけを実行時に取り寄せ、取得commit idとtagの指す先を照合し、全memberを検査して安全展開して実行。repoへ同梱しない。新credential不要。スキャナ本体は手編集しない |
+| ai-ratchet-gate | [nexus-ai-2045/ai-ratchet-gate](https://github.com/nexus-ai-2045/ai-ratchet-gate) 0.2.0 のリリース待ち | 公開取得元（Release / PyPI）が無いため現在は固定できる配布物が無い。repoへ同梱しない。公開後に`requirements-tools.txt`へRelease wheel URL+SHA-256で固定する。それまで手元のratchet手順はfail-closed。既存は baseline、新規 tracked∧ignored のみ fail-closed |
 | Fractal Decision Ecosystem（FDE） | [nexus-ai-2045/fractal-decision-ecosystem](https://github.com/nexus-ai-2045/fractal-decision-ecosystem) | 判断OSのポインタのみ。第二フレームワークを発明しない |
 | engineering-brain | [nexus-ai-2045/engineering-brain](https://github.com/nexus-ai-2045/engineering-brain) | run / research / closeout / PR packet 組立に使う。散文で保証を偽らない |
 | nexus-management-os / nexus_ai | メインライン ops / SSOT | 第二SSOTをこの repo に作らない |
@@ -19,9 +19,7 @@ python -m ai_ratchet_gate --repo .
 python tools/run_repo_preflight.py --repo .
 ```
 
-`.tools/` は gitignore。開発保証 CI は上流流儀の専用 workflow で接続する（検査ロジック非コピー）:
-
-- `.github/workflows/repository-guarantees.yml`（**workflow_dispatch のみ**。空 diff は fail-closed。repo-preflight は pin SHA を実行時取得、ai-ratchet-gate は 0.2.0 リリース待ちで fail-closed）
+`.tools/` は gitignore。Actions の開発保証は必須チェック `all-green`（`.github/workflows/preflight.yml` → repo-preflight の preflight-gate を pin SHA で呼ぶ。検査ロジック非コピー）で見る。専用 workflow（旧 `repository-guarantees.yml`）は検査が重なるため外した。
 
 製品 CI（`.github/workflows/ci.yml`）へ開発保証パッケージは埋め込まない。手元同等手順の正本は [PREFLIGHT.md](../PREFLIGHT.md)。
 
