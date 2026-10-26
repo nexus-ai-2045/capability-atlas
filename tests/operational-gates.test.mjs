@@ -71,30 +71,20 @@ test("consistency config is shadow consumer contract", () => {
   assert.ok(config.readme_contracts.required_paths.includes(".ai-ratchet-gate/baseline.txt"));
 });
 
-test("repository-guarantees workflow is dispatch-only without embedding engineering-brain", () => {
+test("development guarantees come from the pinned preflight-gate without embedding engineering-brain", () => {
   const productCi = read(".github/workflows/ci.yml");
-  const guarantees = read(".github/workflows/repository-guarantees.yml");
+  const preflight = read(".github/workflows/preflight.yml");
 
   assert.match(productCi, /npm run verify/);
   assert.doesNotMatch(productCi, /engineering-brain|engineering_brain/);
   assert.doesNotMatch(productCi, /ai-ratchet-gate|repo-preflight/);
 
-  assert.match(guarantees, /on:\s*\n\s*workflow_dispatch:\s*$/m);
-  assert.doesNotMatch(guarantees, /^\s*pull_request:\s*$/m);
-  assert.doesNotMatch(guarantees, /^\s*push:\s*$/m);
-  assert.match(guarantees, /REPO_PREFLIGHT_SHA: 5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3/);
-  assert.match(guarantees, /空diff fail-closed|BASE==HEAD/);
-  assert.match(guarantees, /python -m ai_ratchet_gate --repo \./);
-  assert.match(guarantees, /consistency_gate\.py/);
-  assert.match(guarantees, /--require-mode shadow/);
-  assert.match(guarantees, /requirements-tools\.txt/);
-  assert.match(guarantees, /tools\/run_repo_preflight\.py --cache.*--prepare-only/);
-  assert.doesNotMatch(guarantees, /git clone|git.*repo-preflight.*checkout/);
-  // コメントで「埋め込まない」と宣言するのは可。実行ステップに埋め込まないこと。
-  assert.match(guarantees, /engineering-brain は埋め込まない/);
-  assert.doesNotMatch(guarantees, /uses:.*engineering-brain|pip install.*engineering[_-]brain/i);
-  assert.doesNotMatch(guarantees, /auto-merge|visibility:\s*public/i);
-
+  // 専用 workflow（旧 repository-guarantees.yml）は外した。整合・readiness・ratchet は必須チェック all-green が見る。
+  assert.equal(existsSync(path.join(root, ".github/workflows/repository-guarantees.yml")), false);
+  assert.match(preflight, /^\s*pull_request:\s*$/m);
+  assert.match(preflight, /uses: nexus-ai-2045\/repo-preflight\/\.github\/workflows\/preflight-gate\.yml@5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3/);
+  assert.doesNotMatch(preflight, /uses:.*engineering-brain|pip install.*engineering[_-]brain/i);
+  assert.doesNotMatch(preflight, /auto-merge|visibility:\s*public/i);
   assert.equal(existsSync(path.join(root, ".github/workflows/ai-ratchet-gate.yml")), false);
   assert.equal(existsSync(path.join(root, ".github/workflows/repo-preflight-consistency.yml")), false);
 });

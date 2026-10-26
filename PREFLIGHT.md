@@ -28,7 +28,7 @@
 
 ### トリガ方針（Actions 課金）
 
-- 開発保証 workflow（`repository-guarantees.yml`）は **`workflow_dispatch` のみ**。`pull_request` / `push` では起動しない
+- 開発保証の専用 workflow（旧 `repository-guarantees.yml`、`workflow_dispatch` のみ）は、実行 0 回で検査が必須チェック `all-green`（`preflight.yml`）と重なるため 2026-10-25 に外した。整合・readiness は必須チェックが PR ごとに見る。ai-ratchet-gate は下の手元同等確認で見る
 - `workflow_dispatch` で BASE と HEAD が同一（空 diff）のときは差分検査を緑にしない（fail-closed）
 - 製品 CI（`.github/workflows/ci.yml`）は別契約。開発保証パッケージは埋め込まない
 
@@ -65,7 +65,7 @@ npm run verify
 npm run smoke:ops
 ```
 
-Actions で同等確認する場合は、feature 枝を選んで `repository-guarantees` を `workflow_dispatch` する（default branch 直上だと空 diff で fail-closed）。
+Actions では必須チェック `all-green`（preflight-gate の consistency_gate・readiness_scan・ratchet）が PR ごとに同じ範囲を見る。
 
 ## 確認済み
 
@@ -74,7 +74,7 @@ Actions で同等確認する場合は、feature 枝を選んで `repository-gua
 - [x] `npm run verify` / `npm run smoke:ops`（ローカル）
 - [x] ai-ratchet-gate baseline（`.ai-ratchet-gate/baseline.txt`、導入時 0 件）
 - [x] repo-preflight consistency `mode=shadow`（`.repo-preflight-consistency.json`）
-- [x] 開発保証を `repository-guarantees.yml`（workflow_dispatch のみ・空diff fail-closed・pin SHA）へ一本化
+- [x] 開発保証の専用 workflow（旧 `repository-guarantees.yml`）は、必須チェック `all-green` と重なるため外した（2026-10-25）
 - [x] 外部契約ポインタの正本は [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
 - [x] PR `#1` → `main` @ `3a244ae` の merge 完了（製品 MVP）
 - [x] PR `#4` → `main` @ `17ae591` の merge 完了（開発保証スイート）
