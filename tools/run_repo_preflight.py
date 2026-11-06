@@ -24,9 +24,9 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 
-# 公開上流の正式release v0.10.0 の commit を実行時に取り寄せる。検査ロジックは手編集しない。
-REPO_PREFLIGHT_SHA = "5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3"
-REPO_PREFLIGHT_TAG = "v0.10.0"
+# 公開上流の検証済み移行タグが指す commit を実行時に取り寄せる。検査ロジックは手編集しない。
+REPO_PREFLIGHT_SHA = "fe2e90f91615a5e5ed3f9b2b497c99f5786e5847"
+REPO_PREFLIGHT_TAG = "base-guard-retired-20261106"
 REPO_PREFLIGHT_URL = "https://github.com/nexus-ai-2045/repo-preflight.git"
 # Test hook only: a local archive whose SHA-256 must equal REPO_PREFLIGHT_ARCHIVE_SHA256.
 # None (the default) means fetch the pinned commit from REPO_PREFLIGHT_URL.

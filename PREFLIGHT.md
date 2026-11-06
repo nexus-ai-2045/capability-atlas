@@ -2,7 +2,7 @@
 
 # 非公開再構築後の依存整合と移行前の記録
 
-現在の対象はprivateの再構築先。以下のPR番号・merge・公開・遠隔CIに関する2026-09の記録は移行前repositoryの履歴であり、再構築先への反映を示さない。依存の配布物はこのrepoへ同梱しない。`repo-preflight`は公開release `v0.10.0`のcommitを実行時に取り寄せて照合する。`ai-ratchet-gate`は公開取得元が無いため、0.2.0のリリース待ち（それまで専用workflowのratchet手順はfail-closed）。
+現在の対象はprivateの再構築先。以下のPR番号・merge・公開・遠隔CIに関する2026-09の記録は移行前repositoryの履歴であり、再構築先への反映を示さない。依存の配布物はこのrepoへ同梱しない。`repo-preflight`は検証済み移行タグ `base-guard-retired-20261106` のcommitを実行時に取り寄せて照合する。`ai-ratchet-gate`は公開取得元が無いため、0.2.0のリリース待ち（それまで専用workflowのratchet手順はfail-closed）。
 
 - repository: `nexus-ai-2045/capability-atlas`
 - 確認済み基準（製品 MVP）: PR `#1` のマージコミット `3a244ae`（`main` 上）
@@ -21,7 +21,7 @@
 
 | 契約 | 上流 | 設定 | 扱い |
 |---|---|---|---|
-| 文書・実装の宣言整合 | `nexus-ai-2045/repo-preflight`（pin SHA `5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3` = `v0.10.0`） | `.repo-preflight-consistency.json`（`shadow`） | `consistency_gate` + `readiness_scan`。shadow 所見は止めない。`tool_error` は fail-closed |
+| 文書・実装の宣言整合 | `nexus-ai-2045/repo-preflight`（pin SHA `fe2e90f91615a5e5ed3f9b2b497c99f5786e5847` = `base-guard-retired-20261106`） | `.repo-preflight-consistency.json`（`shadow`） | `consistency_gate` + `readiness_scan`。shadow 所見は止めない。`tool_error` は fail-closed |
 | tracked ∧ ignored の新規悪化 | `nexus-ai-2045/ai-ratchet-gate`（0.2.0 のリリース待ち。公開後に Release wheel + SHA-256 で固定） | `.ai-ratchet-gate/baseline.txt` | 既存分は grandfather。baseline に無い新規だけ deny |
 
 入口・保証しないことの正本: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)

@@ -4,7 +4,7 @@
 
 | 契約 | 正本 | この repo での扱い |
 |---|---|---|
-| repo-preflight | [nexus-ai-2045/repo-preflight](https://github.com/nexus-ai-2045/repo-preflight) pin `5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3`（`v0.10.0`） | `tools/run_repo_preflight.py`（手元から呼ぶ）が公開上流からこのcommitだけを実行時に取り寄せ、取得commit idとtagの指す先を照合し、全memberを検査して安全展開して実行。repoへ同梱しない。新credential不要。スキャナ本体は手編集しない |
+| repo-preflight | [nexus-ai-2045/repo-preflight](https://github.com/nexus-ai-2045/repo-preflight) pin `fe2e90f91615a5e5ed3f9b2b497c99f5786e5847`（`base-guard-retired-20261106`） | `tools/run_repo_preflight.py`（手元から呼ぶ）が公開上流からこのcommitだけを実行時に取り寄せ、取得commit idとtagの指す先を照合し、全memberを検査して安全展開して実行。repoへ同梱しない。新credential不要。スキャナ本体は手編集しない |
 | ai-ratchet-gate | [nexus-ai-2045/ai-ratchet-gate](https://github.com/nexus-ai-2045/ai-ratchet-gate) 0.2.0 のリリース待ち | 公開取得元（Release / PyPI）が無いため現在は固定できる配布物が無い。repoへ同梱しない。公開後に`requirements-tools.txt`へRelease wheel URL+SHA-256で固定する。それまで手元のratchet手順はfail-closed。既存は baseline、新規 tracked∧ignored のみ fail-closed |
 | Fractal Decision Ecosystem（FDE） | [nexus-ai-2045/fractal-decision-ecosystem](https://github.com/nexus-ai-2045/fractal-decision-ecosystem) | 判断OSのポインタのみ。第二フレームワークを発明しない |
 | engineering-brain | [nexus-ai-2045/engineering-brain](https://github.com/nexus-ai-2045/engineering-brain) | run / research / closeout / PR packet 組立に使う。散文で保証を偽らない |
