@@ -20,7 +20,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 ## Operational contracts (do not reinvent)
 
 - Loop: inventory → diff → classify → safe smoke → evidence → human review → observation. Unknown ops stay `blocked_unknown`.
-- Consume, do not copy: `repo-preflight` fetched at run time at pinned `v0.10.0` commit via `tools/run_repo_preflight.py` (nothing vendored); `ai-ratchet-gate` via hash-pinned Release wheel in `requirements-tools.txt` (pending 0.2.0 release; fail-closed until then) + `.ai-ratchet-gate/baseline.txt`.
+- Consume, do not copy: `repo-preflight` fetched at run time at pinned commit via `tools/run_repo_preflight.py` (nothing vendored); `ai-ratchet-gate` via hash-pinned Release wheel in `requirements-tools.txt` (pending 0.2.0 release; fail-closed until then) + `.ai-ratchet-gate/baseline.txt`.
 - FDE (`nexus-ai-2045/fractal-decision-ecosystem`) is the decision OS pointer only — do not invent a second framework here.
 - Ops/SSOT mainline stays outside this repo (`nexus-management-os` / `nexus_ai`). Do not create a second SSOT here.
 - For run/research/closeout/PR packet assembly, use `engineering-brain` rather than fake assurance in prose.

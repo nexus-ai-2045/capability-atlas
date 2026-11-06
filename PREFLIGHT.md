@@ -21,7 +21,7 @@
 
 | 契約 | 上流 | 設定 | 扱い |
 |---|---|---|---|
-| 文書・実装の宣言整合 | `nexus-ai-2045/repo-preflight`（pin SHA `5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3` = `v0.10.0`） | `.repo-preflight-consistency.json`（`shadow`） | `consistency_gate` + `readiness_scan`。shadow 所見は止めない。`tool_error` は fail-closed |
+| 文書・実装の宣言整合 | `nexus-ai-2045/repo-preflight`（pin SHA `fe2e90f91615a5e5ed3f9b2b497c99f5786e5847` = `v0.10.0`） | `.repo-preflight-consistency.json`（`shadow`） | `consistency_gate` + `readiness_scan`。shadow 所見は止めない。`tool_error` は fail-closed |
 | tracked ∧ ignored の新規悪化 | `nexus-ai-2045/ai-ratchet-gate`（0.2.0 のリリース待ち。公開後に Release wheel + SHA-256 で固定） | `.ai-ratchet-gate/baseline.txt` | 既存分は grandfather。baseline に無い新規だけ deny |
 
 入口・保証しないことの正本: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)

@@ -38,8 +38,8 @@ test("requirements-tools vendors nothing and only accepts hash-pinned remote art
 test("repo-preflight wrapper pins upstream SHA and fail-closes empty base", () => {
   const wrapper = read("tools/run_repo_preflight.py");
   assert.match(wrapper, /nexus-ai-2045\/repo-preflight/);
-  assert.match(wrapper, /REPO_PREFLIGHT_SHA = "5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3"/);
-  assert.match(wrapper, /REPO_PREFLIGHT_TAG = "v0\.10\.0"/);
+  assert.match(wrapper, /REPO_PREFLIGHT_SHA = "fe2e90f91615a5e5ed3f9b2b497c99f5786e5847"/);
+  assert.match(wrapper, /REPO_PREFLIGHT_TAG = "base-guard-retired-20261106"/);
   assert.match(wrapper, /REPO_PREFLIGHT_URL = "https:\/\/github\.com\/nexus-ai-2045\/repo-preflight\.git"/);
   assert.match(wrapper, /readiness_scan\.py/);
   assert.match(wrapper, /consistency_gate\.py/);
@@ -65,7 +65,7 @@ test("consistency config is shadow consumer contract", () => {
   assert.equal(config.mode, "shadow");
   assert.match(
     config.$schema,
-    /repo-preflight\/5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3\/schemas\/repository-consistency\.schema\.json/,
+    /repo-preflight\/fe2e90f91615a5e5ed3f9b2b497c99f5786e5847\/schemas\/repository-consistency\.schema\.json/,
   );
   assert.ok(config.readme_contracts.required_paths.includes("tools/run_repo_preflight.py"));
   assert.ok(config.readme_contracts.required_paths.includes(".ai-ratchet-gate/baseline.txt"));
@@ -82,7 +82,7 @@ test("development guarantees come from the pinned preflight-gate without embeddi
   // 専用 workflow（旧 repository-guarantees.yml）は外した。整合・readiness・ratchet は必須チェック all-green が見る。
   assert.equal(existsSync(path.join(root, ".github/workflows/repository-guarantees.yml")), false);
   assert.match(preflight, /^\s*pull_request:\s*$/m);
-  assert.match(preflight, /uses: nexus-ai-2045\/repo-preflight\/\.github\/workflows\/preflight-gate\.yml@5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3/);
+  assert.match(preflight, /uses: nexus-ai-2045\/repo-preflight\/\.github\/workflows\/preflight-gate\.yml@fe2e90f91615a5e5ed3f9b2b497c99f5786e5847/);
   assert.doesNotMatch(preflight, /uses:.*engineering-brain|pip install.*engineering[_-]brain/i);
   assert.doesNotMatch(preflight, /auto-merge|visibility:\s*public/i);
   assert.equal(existsSync(path.join(root, ".github/workflows/ai-ratchet-gate.yml")), false);
